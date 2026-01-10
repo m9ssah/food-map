@@ -14,8 +14,8 @@ export default function Map({ spots }: Props) {
   const mapRef = useMap(containerRef);
 
   return (
-    <div className="w-full h-full relative">
-      <div ref={containerRef} className="absolute inset-0" />
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
       {mapRef.current  &&
         spots.map((spot) => (
           <Marker
