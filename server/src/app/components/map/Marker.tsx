@@ -1,6 +1,6 @@
 import mapboxgl from 'mapbox-gl';
 import { useEffect } from 'react';
-import {  useMapStore } from '../../stores/mapStore';
+import {  useMapStore } from '../../../stores/mapStore';
 
 type Props = {
     map: mapboxgl.Map;

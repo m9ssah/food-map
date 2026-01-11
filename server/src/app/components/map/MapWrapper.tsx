@@ -1,7 +1,7 @@
 "use client";
 
 import Map from './Map';
-import { Spot } from '../../stores/mapStore';
+import { Spot } from '../../../stores/mapStore';
 
 type Props = {
   spots: Spot[];

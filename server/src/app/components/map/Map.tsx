@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useMap } from './useMap';
 import { Marker } from './Marker'; 
-import { Spot } from '../../stores/mapStore';
+import { Spot } from '../../../stores/mapStore';
 
 type Props = {
   spots: Spot[];
