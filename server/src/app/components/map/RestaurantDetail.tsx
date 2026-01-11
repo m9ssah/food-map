@@ -82,7 +82,6 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
         .select(`
           id,
           rating,
-          comment,
           created_at,
           user_id,
           profiles (
