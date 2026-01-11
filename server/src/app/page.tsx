@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import MapWrapper from "./components/map/MapWrapper";
 import LogoutButton from "./components/LogoutButton";
+import Link from 'next/link';
+import { User } from 'lucide-react';
 
 export default async function Home() {
   const supabase = await createClient();
@@ -25,7 +27,14 @@ export default async function Home() {
   return (
     <main className="h-screen w-screen overflow-hidden bg-gray-900">
       {user && (
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <Link
+            href="/profile"
+            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition flex items-center gap-2"
+          >
+            <User className="w-4 h-4" />
+            Profile
+          </Link>
           <LogoutButton />
         </div>
       )}
