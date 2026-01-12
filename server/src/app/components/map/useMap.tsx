@@ -7,8 +7,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
 
 export function useMap(containerRef: React.RefObject<HTMLDivElement | null>) {
-  const DEFAULT_CENTER = [-79.395314, 43.661582];
-  const DEFAULT_ZOOM = 12;
+  const DEFAULT_CENTER: [number, number] = [-79.392022, 43.662731];
+  const DEFAULT_ZOOM: number = 15.42;
 
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [isMapReady, setIsMapReady] = useState(false); 
