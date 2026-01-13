@@ -19,6 +19,7 @@ type RestaurantData = {
     google_ratings_count?: number;
     google_price_level?: number;
     google_opening_hours?: GoogleOpeningHours;
+    google_photo_reference?: string;
     google_last_synced_at?: string;
 };
 
@@ -37,7 +38,7 @@ const getCachedGooglePlacesData = unstable_cache(
 
         try {
             const googleResponse = await fetch(
-                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=opening_hours,rating,user_ratings_total,price_level&key=${googlePlacesApi}`,
+                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=opening_hours,rating,user_ratings_total,price_level,photos&key=${googlePlacesApi}`,
                 { next: { revalidate: 3600 } }
             );
 
@@ -48,11 +49,15 @@ const getCachedGooglePlacesData = unstable_cache(
                 return null;
             }
 
+            // very first photo ref
+            const photoReference = googleData.result.photos?.[0]?.photo_reference;
+
             return {
                 google_rating: googleData.result.rating,
                 google_ratings_count: googleData.result.user_ratings_total,
                 google_price_level: googleData.result.price_level,
                 google_opening_hours: googleData.result.opening_hours,
+                google_photo_reference: photoReference,
             };
         } catch (error) {
             console.error('Error fetching from Google Places API:', error);

@@ -22,6 +22,7 @@ type Restaurant = {
     google_ratings_count?: number;
     google_price_level?: number;
     google_opening_hours?: GoogleOpeningHours;
+    google_photo_reference?: string;
     category?: string;
     hours?: string;
 };
@@ -141,10 +142,14 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     const { restaurant, averageRating, totalRatings } = data;
 
+    const photoUrl = restaurant.google_photo_reference 
+        ? `/api/google/photo?reference=${encodeURIComponent(restaurant.google_photo_reference)}&maxwidth=400`
+        : null;
+
     return (
       <div className="absolute top-0 right-0 h-full w-96 bg-gray-800 shadow-2xl z-50 overflow-y-auto">
             {/* Header */}
-            <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-4 flex items-start justify-between z-10">
+            <div className={`${photoUrl ? '' : 'sticky top-0'} bg-gray-800 border-b border-gray-700 p-4 flex items-start justify-between z-10`}>
                 <div className="flex-1">
                     <h2 className="text-2xl font-bold text-white mb-1">
                         {restaurant.name}
@@ -158,19 +163,98 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                     </div>
                     {/* re add price range later */}
                 </div>
-                <button
-                    onClick={onClose}
-                    className="ml-4 p-2 hover:bg-gray-700 rounded-lg transition"
+                {!photoUrl && (
+                    <button
+                        onClick={onClose}
+                        className="ml-4 p-2 hover:bg-gray-700 rounded-lg transition"
                     >
-                    <X className="w-5 h-5 text-gray-400" />
-                </button>
+                        <X className="w-5 h-5 text-gray-400" />
+                    </button>
+                )}
             </div>
+
+            {/* Photo */}
+            {photoUrl && (
+                <div className="px-4 pt-4">
+                    <div className="relative w-full h-64 overflow-hidden rounded-xl">
+                        <img 
+                            src={photoUrl} 
+                        alt={restaurant.name}
+                        className="w-full h-full object-cover"
+                    />
+                    <button
+                        onClick={onClose}
+                        className="absolute top-3 right-3 p-2 bg-gray-900/70 hover:bg-gray-900 rounded-lg transition"
+                        >
+                        <X className="w-5 h-5 text-white" />
+                    </button>
+                    </div>
+                </div>
+            )}
+
 
             {/* Content */}
             <div className="p-6 space-y-6">
+                  {/* Combined Rating Section */}
+                  {(averageRating !== null || restaurant.google_rating) && (
+                      <div>
+                          <h4 className="text-gray-400 text-xs uppercase mb-2"></h4>
+                          {(() => {
+                              //  combine ratings
+                              const communityWeight = totalRatings;
+                              const googleWeight = restaurant.google_ratings_count || 0;
+                              const totalWeight = communityWeight + googleWeight;
+                              
+                              let combinedRating: number;
+                              let totalReviews: number;
+                              
+                              if (averageRating !== null && restaurant.google_rating) {
+                                  // weighted average of both
+                                  combinedRating = (
+                                      (averageRating * communityWeight) + 
+                                      (restaurant.google_rating * googleWeight)
+                                  ) / totalWeight;
+                                  totalReviews = totalWeight;
+                              } else if (averageRating !== null) {
+                                  combinedRating = averageRating;
+                                  totalReviews = totalRatings;
+                              } else {
+                                  combinedRating = restaurant.google_rating!;
+                                  totalReviews = googleWeight;
+                              }
+                              
+                              return (
+                                  <div className="flex items-center justify-start gap-5">
+                                      <div className="flex items-center gap-2">
+                                          <span className="text-white text-xl font-bold">
+                                              {combinedRating.toFixed(1)}
+                                          </span>
+                                          <div className="flex items-center">
+                                              {[1, 2, 3, 4, 5].map((star) => (
+                                                  <Star
+                                                      key={star}
+                                                      className={`w-5 h-5 ${
+                                                          star <= Math.round(combinedRating)
+                                                              ? 'fill-yellow-400 text-yellow-400'
+                                                              : 'text-gray-600'
+                                                      }`}
+                                                  />
+                                              ))}
+                                          </div>
+                                      </div>
+                                      {restaurant.google_price_level !== undefined && restaurant.google_price_level > 0 && (
+                                          <span className="text-gray-300 text-xl">
+                                              {'$'.repeat(restaurant.google_price_level)}
+                                          </span>
+                                      )}
+                                  </div>
+                              );
+                          })()}
+                      </div>
+                  )}
                   {/* Location */}
                   {restaurant.address && (
-                      <div>
+                    <div>
                           <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
                               <MapPin className="w-4 h-4" />
                               Location
@@ -179,18 +263,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                       </div>
                   )}
 
-                {/* Google Price Level */}
-                {restaurant.google_price_level !== undefined && restaurant.google_price_level > 0 && (
-                  <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-green-400" />
-                        <span className="text-gray-300">
-                            {'$'.repeat(restaurant.google_price_level)}
-                        </span>
-                        <span className="text-gray-500 text-sm">
-                            (Price level)
-                        </span>
-                    </div>
-                )}
+
 
                 {/* Description */}
                 {restaurant.description && (
@@ -219,7 +292,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                         {restaurant.google_opening_hours?.weekday_text ? (
                           <div className="space-y-1">
                                 {restaurant.google_opening_hours.weekday_text.map((day, index) => (
-                                    <p key={index} className="text-gray-300 text-sm">{day}</p>
+                                  <p key={index} className="text-gray-300 text-sm">{day}</p>
                                 ))}
                             </div>
                         ) : restaurant.hours ? (
@@ -228,75 +301,22 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                     </div>
                 )}
 
-                {/* Combined Rating Section */}
-                {(averageRating !== null || restaurant.google_rating) && (
-                    <div className="bg-gray-900 rounded-lg p-4">
-                        <h4 className="text-gray-400 text-xs uppercase mb-2">Rating</h4>
-                        {(() => {
-                            //  combine ratings
-                            const communityWeight = totalRatings;
-                            const googleWeight = restaurant.google_ratings_count || 0;
-                            const totalWeight = communityWeight + googleWeight;
-                            
-                            let combinedRating: number;
-                            let totalReviews: number;
-                            
-                            if (averageRating !== null && restaurant.google_rating) {
-                                // weighted average of both
-                                combinedRating = (
-                                    (averageRating * communityWeight) + 
-                                    (restaurant.google_rating * googleWeight)
-                                ) / totalWeight;
-                                totalReviews = totalWeight;
-                            } else if (averageRating !== null) {
-                                combinedRating = averageRating;
-                                totalReviews = totalRatings;
-                            } else {
-                                combinedRating = restaurant.google_rating!;
-                                totalReviews = googleWeight;
-                            }
-                            
-                            return (
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <Star
-                                                key={star}
-                                                className={`w-5 h-5 ${
-                                                    star <= Math.round(combinedRating)
-                                                        ? 'fill-yellow-400 text-yellow-400'
-                                                        : 'text-gray-600'
-                                                }`}
-                                            />
-                                        ))}
-                                    </div>
-                                    <span className="text-white font-semibold">
-                                        {combinedRating.toFixed(1)}
-                                    </span>
-                                    <span className="text-gray-400 text-sm">
-                                        ({totalReviews.toLocaleString()} {totalReviews === 1 ? 'review' : 'reviews'})
-                                    </span>
-                                </div>
-                            );
-                        })()}
-                    </div>
-                )}
 
                 {/* Rating */}
                 <div className="pt-4 border-t border-gray-700">
                     {user ? (
-                        <p className="text-gray-400 text-sm text-center">
+                      <p className="text-gray-400 text-sm text-center">
                             Rating feature coming soon!
                         </p>
                     ) : (
-                        <div className="text-center">
+                      <div className="text-center">
                             <p className="text-gray-400 text-sm mb-3">
                                 Sign in to rate this restaurant
                             </p>
                             <a
                                 href="/login"
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                            >
+                                >
                                 <LogIn className="w-4 h-4" />
                                 Sign In to Rate
                             </a>
