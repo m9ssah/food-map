@@ -43,7 +43,7 @@ export default async function Home() {
         <div className="absolute top-4 right-4 z-10">
           <a
             href="/login"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="px-4 py-2 bg-[#29496E] text-white rounded-lg hover:bg-[#1E5493] transition"
           >
             Sign In
           </a>
