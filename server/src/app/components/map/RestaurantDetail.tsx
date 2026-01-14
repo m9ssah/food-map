@@ -23,12 +23,18 @@ type Restaurant = {
     google_price_level?: number;
     google_opening_hours?: GoogleOpeningHours;
     google_photo_reference?: string;
-    category?: string;
     hours?: string;
+};
+
+type Category = {
+    id: string;
+    slug: string;
+    name: string;
 };
 
 type RestaurantData = {
     restaurant: Restaurant;
+    categories?: Category[];
     averageRating: number | null;
     totalRatings: number;
 };
@@ -140,7 +146,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
         );
     }
 
-    const { restaurant, averageRating, totalRatings } = data;
+    const { restaurant, categories = [], averageRating, totalRatings } = data;
 
     const photoUrl = restaurant.google_photo_reference 
         ? `/api/google/photo?reference=${encodeURIComponent(restaurant.google_photo_reference)}&maxwidth=400`
@@ -154,13 +160,6 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                     <h2 className="text-2xl font-bold text-white mb-1">
                         {restaurant.name}
                     </h2>
-                    <div className="flex gap-2 flex-wrap">
-                        {restaurant.category && (
-                          <span className="inline-block px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
-                                {restaurant.category}
-                            </span>
-                        )}  
-                    </div>
                     {/* re add price range later */}
                 </div>
                 {!photoUrl && (
@@ -252,6 +251,17 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                           })()}
                       </div>
                   )}
+                  {/* Categories */}
+                    <div className="flex gap-2 flex-wrap">
+                        {categories && categories.length > 0 && categories.map((category) => (
+                            <span 
+                                key={category.id}
+                                className="inline-block px-4 py-2 bg-gray-900 text-white text-xl rounded-lg"
+                            >
+                                {category.name}
+                            </span>
+                        ))}
+                    </div>
                   {/* Location */}
                   {restaurant.address && (
                     <div>
