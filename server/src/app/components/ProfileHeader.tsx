@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Edit2, Check, X } from 'lucide-react'
+import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { Edit2, Check, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 type Props = {
   userId: string
@@ -16,6 +17,7 @@ export default function ProfileHeader({ userId, initialUsername, initialBio }: P
   const [saving, setSaving] = useState(false)
   
   const supabase = createClient()
+  const router = useRouter()
 
   const handleSaveBio = async () => {
     setSaving(true)
@@ -30,6 +32,7 @@ export default function ProfileHeader({ userId, initialUsername, initialBio }: P
       alert('Failed to save bio')
     } else {
       setIsEditingBio(false)
+      router.refresh()  
     }
     
     setSaving(false)
