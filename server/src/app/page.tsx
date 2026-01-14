@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import MapWrapper from "./components/map/MapWrapper";
 import LogoutButton from "./components/LogoutButton";
 import Link from 'next/link';
-import { User } from 'lucide-react';
+import { User, Search } from 'lucide-react';
+import SearchBar from "./components/SearchBar"; 
 
 export default async function Home() {
   const supabase = await createClient();
@@ -26,6 +27,10 @@ export default async function Home() {
 
   return (
     <main className="h-screen w-screen overflow-hidden bg-gray-900">
+
+      {/* Search bar */}
+      <SearchBar />
+
       {user && (
         <div className="absolute top-4 right-4 z-10 flex gap-2">
           <Link
@@ -38,7 +43,7 @@ export default async function Home() {
           <LogoutButton />
         </div>
       )}
-      
+
       {!user && (
         <div className="absolute top-4 right-4 z-10">
           <a

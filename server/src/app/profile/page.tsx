@@ -4,6 +4,7 @@ import { Star, ArrowLeft, Heart, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import LogoutButton from '../components/LogoutButton';
 import Image from 'next/image';
+import ProfileHeader from '../components/ProfileHeader';
 
 type UserRating = {
   id: string;
@@ -52,7 +53,7 @@ export default async function ProfilePage() {
 
   const ratings = (userRatings || []) as UserRating[];
 
-  return (
+return (
     <div className="min-h-screen bg-[#2C3E50]">
       {/* Header */}
       <div className="bg-[#34495E] border-b border-gray-700">
@@ -69,34 +70,18 @@ export default async function ProfilePage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Profile Header */}
-        <div className="mb-8">
-          {/* Avatar */}
-          <div className="w-24 h-24 bg-gray-600 rounded-full mb-4" />
-          
-          {/* Username */}
-          <h1 className="text-3xl font-bold text-white mb-1">
-            @{profile?.username || user.email?.split('@')[0]}
-          </h1>
-          
-          {/* Bio */}
-          <p className="text-gray-300 mb-4">
-            {profile?.bio || `CS | UofT '${new Date().getFullYear() + 2}`}
-          </p>
+        {/* Profile Header - Now using the client component */}
+        <ProfileHeader 
+          userId={user.id}
+          initialUsername={profile?.username || user.email?.split('@')[0] || 'User'}
+          initialBio={profile?.bio}
+        />
 
-          {/* Stats */}
-          <div className="flex gap-3 mb-6">
-            <div className="px-6 py-2 bg-white rounded-full">
-              <span className="font-bold text-gray-900">0</span>
-              <span className="text-gray-600 ml-1">Friends</span>
-            </div>
-            <div className="px-6 py-2 bg-white rounded-full">
-              <span className="font-bold text-gray-900">{ratings.length}</span>
-              <span className="text-gray-600 ml-1">Reviews</span>
-            </div>
-            <button className="px-6 py-2 bg-yellow-400 text-gray-900 font-semibold rounded-full hover:bg-yellow-500 transition">
-              View Blends
-            </button>
+        {/* Stats */}
+        <div className="flex gap-3 mb-8">
+          <div className="px-6 py-2 bg-white rounded-full">
+            <span className="font-bold text-gray-900">{ratings.length}</span>
+            <span className="text-gray-600 ml-1">Reviews</span>
           </div>
         </div>
 
@@ -109,7 +94,7 @@ export default async function ProfilePage() {
               <p className="text-gray-300 mb-4">No reviews yet</p>
               <Link
                 href="/"
-                className="inline-block px-6 py-2 bg-white text-[#002F65] font-semibold rounded-lg hover:bg-[#95B4D8] transition"
+                className="inline-block px-6 py-2 bg-white text-[#002F65] font-bold rounded-lg hover:bg-[#95B4D8] transition"
               >
                 Explore Restaurants
               </Link>
@@ -163,7 +148,6 @@ export default async function ProfilePage() {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4">Food Wishlist</h2>
           <div className="bg-[#1E2A38] rounded-2xl overflow-hidden">
-            {/* Placeholder - you can add want-to-try functionality later */}
             <div className="p-6 text-center text-gray-400">
               Wishlist feature coming soon!
             </div>

@@ -153,9 +153,9 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
         : null;
 
     return (
-      <div className="absolute top-0 right-0 h-full w-96 bg-gray-800 shadow-2xl z-50 overflow-y-auto">
+      <div className="absolute top-0 right-0 h-full w-96 bg-[#213955] shadow-2xl z-50 overflow-y-auto">
             {/* Header */}
-            <div className={`${photoUrl ? '' : 'sticky top-0'} bg-gray-800 border-b border-gray-700 p-4 flex items-start justify-between z-10`}>
+            <div className={`${photoUrl ? '' : 'sticky top-0'} bg-[#213955] border-b border-gray-700 p-4 flex items-start justify-between z-10`}>
                 <div className="flex-1">
                     <h2 className="text-2xl font-bold text-white mb-1">
                         {restaurant.name}
