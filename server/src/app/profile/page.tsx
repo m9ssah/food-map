@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { Star, MapPin, Calendar, ArrowLeft } from 'lucide-react';
+import { Star, ArrowLeft, Heart, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import LogoutButton from '../components/LogoutButton';
+import Image from 'next/image';
 
 type UserRating = {
   id: string;
@@ -51,123 +52,175 @@ export default async function ProfilePage() {
 
   const ratings = (userRatings || []) as UserRating[];
 
-  const averageRating = ratings.length > 0
-    ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
-    : 0;
-
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#2C3E50]">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-[#34495E] border-b border-gray-700">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition"
+            className="flex items-center gap-2 text-gray-300 hover:text-white transition"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back to Map
+            Back
           </Link>
           <LogoutButton />
         </div>
       </div>
 
-      {/* Profile Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Profile Header */}
-        <div className="bg-gray-800 rounded-lg p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                {profile?.username || 'Anonymous User'}
-              </h1>
-              <p className="text-gray-400 flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Joined {new Date(profile?.created_at || user.created_at).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-
-          {profile?.bio && (
-            <p className="text-gray-300 mb-4">{profile.bio}</p>
-          )}
+        <div className="mb-8">
+          {/* Avatar */}
+          <div className="w-24 h-24 bg-gray-600 rounded-full mb-4" />
+          
+          {/* Username */}
+          <h1 className="text-3xl font-bold text-white mb-1">
+            @{profile?.username || user.email?.split('@')[0]}
+          </h1>
+          
+          {/* Bio */}
+          <p className="text-gray-300 mb-4">
+            {profile?.bio || `CS | UofT '${new Date().getFullYear() + 2}`}
+          </p>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <div className="bg-gray-900 rounded-lg p-4">
-              <p className="text-gray-400 text-sm mb-1">Total Reviews</p>
-              <p className="text-3xl font-bold text-white">{ratings.length}</p>
+          <div className="flex gap-3 mb-6">
+            <div className="px-6 py-2 bg-white rounded-full">
+              <span className="font-bold text-gray-900">0</span>
+              <span className="text-gray-600 ml-1">Friends</span>
             </div>
-            <div className="bg-gray-900 rounded-lg p-4">
-              <p className="text-gray-400 text-sm mb-1">Average Rating</p>
-              <div className="flex items-center gap-2">
-                <p className="text-3xl font-bold text-white">
-                  {averageRating > 0 ? averageRating.toFixed(1) : '--'}
-                </p>
-                {averageRating > 0 && (
-                  <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
-                )}
-              </div>
+            <div className="px-6 py-2 bg-white rounded-full">
+              <span className="font-bold text-gray-900">{ratings.length}</span>
+              <span className="text-gray-600 ml-1">Reviews</span>
             </div>
+            <button className="px-6 py-2 bg-yellow-400 text-gray-900 font-semibold rounded-full hover:bg-yellow-500 transition">
+              View Blends
+            </button>
           </div>
         </div>
 
-        {/* User's Ratings */}
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-4">Your Reviews</h2>
+        {/* Recent Activity */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white mb-4">Recent Activity</h2>
           
           {ratings.length === 0 ? (
-            <div className="bg-gray-800 rounded-lg p-8 text-center">
-              <MapPin className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400 mb-4">You haven't reviewed any restaurants yet</p>
+            <div className="bg-[#4A5F7F] rounded-2xl p-8 text-center">
+              <p className="text-gray-300 mb-4">No reviews yet</p>
               <Link
                 href="/"
-                className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="inline-block px-6 py-2 bg-white text-[#002F65] font-semibold rounded-lg hover:bg-[#95B4D8] transition"
               >
                 Explore Restaurants
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
-              {ratings.map((rating) => (
-                <div key={rating.id} className="bg-gray-800 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="text-white font-semibold text-lg">
-                        {rating.restaurants?.name || 'Unknown Restaurant'}
-                      </h3>
-                      {rating.restaurants?.category && (
-                        <span className="inline-block px-2 py-1 bg-blue-600 text-white text-xs rounded-full mt-1">
-                          {rating.restaurants.category}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-5 h-5 ${
-                            star <= rating.rating
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-600'
-                          }`}
-                        />
-                      ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {ratings.slice(0, 4).map((rating) => (
+                <div key={rating.id} className="bg-[#A8C5DD] rounded-2xl p-4">
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-gray-800 font-semibold">
+                        {profile?.username || 'You'}
+                      </span>
+                      <span className="text-gray-600">reviewed</span>
+                      <span className="text-gray-800 font-semibold">
+                        {rating.restaurants?.name}
+                      </span>
+                      <div className="flex">
+                        {[...Array(rating.rating)].map((_, i) => (
+                          <span key={i}>⭐</span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  
+
+                  {/* Placeholder for image */}
+                  <div className="bg-white rounded-lg h-32 mb-3 flex items-center justify-center">
+                    <span className="text-gray-400 text-sm">Photo coming soon</span>
+                  </div>
+
+                  {/* Comment */}
                   {rating.comment && (
-                    <p className="text-gray-300 mb-2">{rating.comment}</p>
+                    <p className="text-gray-800 mb-3">{rating.comment}</p>
                   )}
-                  
-                  <p className="text-gray-500 text-sm">
-                    {new Date(rating.created_at).toLocaleDateString()}
-                  </p>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between text-gray-600 text-sm">
+                    <span>{getTimeAgo(rating.created_at)}</span>
+                    <div className="flex items-center gap-1">
+                      <Heart className="w-4 h-4" />
+                      <span>0 likes</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Food Wishlist */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white mb-4">Food Wishlist</h2>
+          <div className="bg-[#1E2A38] rounded-2xl overflow-hidden">
+            {/* Placeholder - you can add want-to-try functionality later */}
+            <div className="p-6 text-center text-gray-400">
+              Wishlist feature coming soon!
+            </div>
+          </div>
+        </div>
+
+        {/* Campus Favorites */}
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-4">Campus Favorites</h2>
+          <div className="bg-[#1E2A38] rounded-2xl overflow-hidden">
+            {ratings.length > 0 ? (
+              ratings
+                .filter((r) => r.rating >= 4)
+                .slice(0, 3)
+                .map((rating, index) => (
+                  <div
+                    key={rating.id}
+                    className={`p-4 flex items-center justify-between ${
+                      index !== 0 ? 'border-t border-gray-700' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-white font-semibold">
+                        {rating.restaurants?.name}
+                      </span>
+                      <Heart className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <Link
+                      href="/"
+                      className="px-4 py-2 bg-[#A8C5DD] text-gray-900 rounded-lg hover:bg-[#9BB5CD] transition"
+                    >
+                      View Review
+                    </Link>
+                  </div>
+                ))
+            ) : (
+              <div className="p-6 text-center text-gray-400">
+                No favorites yet - rate some restaurants!
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
+}
+
+// helper function to get time ago string
+function getTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInDays === 0) return 'today';
+  if (diffInDays === 1) return '1 day ago';
+  if (diffInDays < 30) return `${diffInDays} days ago`;
+  if (diffInDays < 60) return '1 month ago';
+  return `${Math.floor(diffInDays / 30)} months ago`;
 }
