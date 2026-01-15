@@ -31,6 +31,12 @@ type RatingWithProfile = {
     restaurant_id: string;
 };
 
+type Category = {
+    id: string;
+    slug: string;
+    name: string;
+};
+
 // cache data for 1 hour
 const getCachedGooglePlacesData = unstable_cache(
     async (placeId: string) => {
@@ -83,7 +89,7 @@ export async function GET(
 
     const supabase = await createClient();
 
-    const [restaurantResult, ratingsResult] = await Promise.all([
+    const [restaurantResult, ratingsResult, categoriesResult] = await Promise.all([
         supabase
             .from('restaurants')
             .select('*')
@@ -92,8 +98,24 @@ export async function GET(
         supabase
             .from('ratings')
             .select('score')
+            .eq('restaurant_id', restaurantId),
+        supabase
+            .from('restaurant_categories')
+            .select('*')
             .eq('restaurant_id', restaurantId)
     ]);
+
+    let categories: Category[] = [];
+    if (categoriesResult.data && categoriesResult.data.length > 0) {
+        const categoryIds = categoriesResult.data.map((rc: { category_id: string }) => rc.category_id);
+        const { data: categoriesData } = await supabase
+            .from('categories')
+            .select('id, slug, name')
+            .in('id', categoryIds);
+        
+        categories = categoriesData ?? [];
+        console.log('Fetched categories:', categories);
+    }
 
     if (restaurantResult.error) {
         console.error('Error fetching restaurant:', restaurantResult.error);
@@ -132,6 +154,7 @@ export async function GET(
 
     const responseData = {
         restaurant: googleData ? { ...restaurant, ...googleData } : restaurant,
+        categories,
         averageRating,
         totalRatings,
     };
