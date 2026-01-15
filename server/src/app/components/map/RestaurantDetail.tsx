@@ -9,7 +9,6 @@ type GoogleOpeningHours = {
     open_now?: boolean;
     weekday_text?: string[];
 };
-
 type Restaurant = {
     id: string;
     name: string;
