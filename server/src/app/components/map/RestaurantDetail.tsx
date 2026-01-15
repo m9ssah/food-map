@@ -9,7 +9,6 @@ type GoogleOpeningHours = {
     open_now?: boolean;
     weekday_text?: string[];
 };
-
 type Restaurant = {
     id: string;
     name: string;
@@ -130,7 +129,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
         );
     }
 
-    if (error || !data) {
+    if (error) {
         return (
             <div className="absolute top-0 right-0 h-full w-96 bg-gray-800 shadow-2xl z-50 p-6">
                 <div className="flex flex-col items-center justify-center h-full gap-4">
@@ -144,6 +143,22 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                 </div>
             </div>
         );
+    }
+
+    if (!data) {
+        return (
+            <div className="absolute top-0 right-0 h-full w-96 bg-gray-800 shadow-2xl z-50 p-6">
+                <div className="flex flex-col items-center justify-center h-full gap-4">
+                    <div className="text-white">{error || 'Loading Restaurant'}</div>
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        )
     }
 
     const { restaurant, categories = [], averageRating, totalRatings } = data;
