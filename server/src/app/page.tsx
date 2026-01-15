@@ -22,7 +22,8 @@ export default async function Home() {
     id: restaurant.id, 
     name: restaurant.name, 
     lat: restaurant.latitude, 
-    lng: restaurant.longitude
+    lng: restaurant.longitude,
+    // category: restaurant.category
   })) || []; 
 
   return (
@@ -30,31 +31,6 @@ export default async function Home() {
 
       {/* Search bar */}
       <SearchBar />
-
-      {user && (
-        <div className="absolute top-4 right-4 z-10 flex gap-2">
-          <Link
-            href="/profile"
-            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition flex items-center gap-2"
-          >
-            <User className="w-4 h-4" />
-            Profile
-          </Link>
-          <LogoutButton />
-        </div>
-      )}
-
-      {!user && (
-        <div className="absolute top-4 right-4 z-10">
-          <a
-            href="/login"
-            className="px-4 py-2 bg-[#29496E] text-white rounded-lg hover:bg-[#1E5493] transition"
-          >
-            Sign In
-          </a>
-        </div>
-      )}
-      
       <div className="w-full h-full">
         <MapWrapper spots={spots} />
       </div>

@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { X, Star, MapPin, LogIn, Clock, DollarSign } from 'lucide-react';
+import { X, Star, MapPin, LogIn, Clock } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
+import { Inter } from 'next/font/google';
 
 type GoogleOpeningHours = {
     open_now?: boolean;
@@ -121,7 +122,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     if (loading) {
         return (
-            <div className="absolute top-0 right-0 h-full w-96 bg-gray-800 shadow-2xl z-50 p-6">
+            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/70 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
                 <div className="flex items-center justify-center h-full">
                     <div className="text-gray-400">Loading...</div>
                 </div>
@@ -131,12 +132,12 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     if (error) {
         return (
-            <div className="absolute top-0 right-0 h-full w-96 bg-gray-800 shadow-2xl z-50 p-6">
+            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/70 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                     <div className="text-red-400">{error || 'Restaurant not found'}</div>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+                        className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition"
                     >
                         Close
                     </button>
@@ -147,12 +148,12 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     if (!data) {
         return (
-            <div className="absolute top-0 right-0 h-full w-96 bg-gray-800 shadow-2xl z-50 p-6">
+            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/70 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                     <div className="text-white">{error || 'Loading Restaurant'}</div>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+                        className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition"
                     >
                         Close
                     </button>
@@ -168,25 +169,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
         : null;
 
     return (
-      <div className="absolute top-0 right-0 h-full w-96 bg-[#213955] shadow-2xl z-50 overflow-y-auto">
-            {/* Header */}
-            <div className={`${photoUrl ? '' : 'sticky top-0'} bg-[#213955] border-b border-gray-700 p-4 flex items-start justify-between z-10`}>
-                <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-white mb-1">
-                        {restaurant.name}
-                    </h2>
-                    {/* re add price range later */}
-                </div>
-                {!photoUrl && (
-                    <button
-                        onClick={onClose}
-                        className="ml-4 p-2 hover:bg-gray-700 rounded-lg transition"
-                    >
-                        <X className="w-5 h-5 text-gray-400" />
-                    </button>
-                )}
-            </div>
-
+      <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/70 border border-white/10 shadow-2xl z-50 overflow-y-auto rounded-2xl">
             {/* Photo */}
             {photoUrl && (
                 <div className="px-4 pt-4">
@@ -198,21 +181,36 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                     />
                     <button
                         onClick={onClose}
-                        className="absolute top-3 right-3 p-2 bg-gray-900/70 hover:bg-gray-900 rounded-lg transition"
+                        className="absolute top-3 right-3 p-2 bg-gray-900/70 hover:bg-gray-700 rounded-lg transition"
                         >
                         <X className="w-5 h-5 text-white" />
                     </button>
                     </div>
                 </div>
             )}
-
-
+            {/* Header */}
+            <div className={`${photoUrl ? '' : 'sticky top-0 backdrop-blur-xl bg-gray-900/70'} p-4 flex items-start justify-between z-10`}>
+                <div>
+                    <h2 className="text-2xl font-bold text-white">
+                        {restaurant.name}
+                    </h2>
+                    {/* re add price range later */}
+                </div>
+                {!photoUrl && (
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-white/10 rounded-full transition"
+                    >
+                        <X className="w-5 h-5 text-gray-400" />
+                    </button>
+                )}
+            </div>
+            
             {/* Content */}
-            <div className="p-6 space-y-6">
+            <div className="px-5 space-y-6">
                   {/* Combined Rating Section */}
                   {(averageRating !== null || restaurant.google_rating) && (
                       <div>
-                          <h4 className="text-gray-400 text-xs uppercase mb-2"></h4>
                           {(() => {
                               //  combine ratings
                               const communityWeight = totalRatings;
@@ -271,7 +269,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                         {categories && categories.length > 0 && categories.map((category) => (
                             <span 
                                 key={category.id}
-                                className="inline-block px-4 py-2 bg-gray-900 text-white text-xl rounded-lg"
+                                className="inline-block px-3 py-1.5 bg-white/10 text-white text rounded-l border border-white/10"
                             >
                                 {category.name}
                             </span>
@@ -280,15 +278,13 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                   {/* Location */}
                   {restaurant.address && (
                     <div>
-                          <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
-                              <MapPin className="w-4 h-4" />
+                          <h3 className="text-white text-xl font-semibold mb-2 flex items-center gap-4">
+                              <MapPin className="w-5 h-5" />
                               Location
                           </h3>
-                          <p className="text-gray-300">{restaurant.address}</p>
+                          <p className="ml-1 text-gray-300 text-l">{restaurant.address}</p>
                       </div>
                   )}
-
-
 
                 {/* Description */}
                 {restaurant.description && (
@@ -328,7 +324,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
 
                 {/* Rating */}
-                <div className="pt-4 border-t border-gray-700">
+                <div className="pt-4 border-t border-white/10">
                     {user ? (
                       <p className="text-gray-400 text-sm text-center">
                             Rating feature coming soon!
@@ -340,7 +336,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                             </p>
                             <a
                                 href="/login"
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition"
                                 >
                                 <LogIn className="w-4 h-4" />
                                 Sign In to Rate

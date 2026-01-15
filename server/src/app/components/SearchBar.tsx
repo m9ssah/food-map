@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, X, Star } from 'lucide-react'
+import { Search, X, Star, SlidersHorizontal, Coffee, Globe, DollarSign, Vegan, Clock, Utensils } from 'lucide-react'
 import { useMapStore } from '@/stores/mapStore'
 
 type Restaurant = {
@@ -16,11 +16,21 @@ type Restaurant = {
   google_ratings_count: number | null
 }
 
+const filterChips = [
+  { icon: Coffee, label: 'Cafes' },
+  { icon: Utensils, label: 'Restaurants' },
+  { icon: Vegan, label: 'Vegetarian' },
+  { icon: Globe, label: 'Middle Eastern' },
+  { icon: DollarSign, label: 'Cheap Eats' },
+  { icon: Clock, label: 'Open Now' },
+]
+
 export default function SearchBar() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Restaurant[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const searchRef = useRef<HTMLDivElement>(null)
   
   const supabase = createClient()
@@ -100,30 +110,61 @@ export default function SearchBar() {
 }, [supabase])
 
   return (
-    <div className="absolute top-4 left-4 z-10" ref={searchRef}>
-      <div className="relative w-80">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#002F65]" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search restaurants..."
-          className="w-full pl-10 pr-10 py-2 bg-white text-[#002F65] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        {query && (
-          <button
-            onClick={handleClear}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
+    <div className="absolute top-4 left-4 z-10 flex flex-col items-center" ref={searchRef}>
+      <div className="w-full max-w-2xl">
+        <div className="backdrop-blur-xl bg-gray-900/60 border border-white/10 rounded-2xl shadow-2xl p-2">
+          <div className="flex items-center px-3 py-2">
+            <Search className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search restaurants..."
+              className="w-full bg-transparent border-none outline-none text-white text-sm placeholder-gray-400"
+            />
+            {query && (
+              <button
+                onClick={handleClear}
+                className="ml-2 p-1.5 rounded-full hover:bg-white/10 transition"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            )}
+            <button className="ml-2 p-2 rounded-full hover:bg-white/10 transition">
+              <SlidersHorizontal className="w-5 h-5 text-gray-300" />
+            </button>
+            {/* Profile Button */}
+            <a href="/profile" className="ml-2 p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
+              <div className="w-5 h-5 rounded-full bg-gray-500 flex items-center justify-center">
+                <span className="text-xs text-white"></span>
+              </div>
+            </a>
+          </div>
+          
+          {/* Filter Chips Row */}
+          <div className="flex gap-2 px-2 pb-2 overflow-x-auto scrollbar-hide">
+            {filterChips.map((chip) => (
+              <button
+                key={chip.label}
+                onClick={() => setActiveFilter(activeFilter === chip.label ? null : chip.label)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition ${
+                  activeFilter === chip.label
+                    ? 'bg-white text-gray-900'
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                <chip.icon className="w-4 h-4" />
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Search Results Dropdown */}
         {isOpen && (
-          <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl max-h-96 overflow-y-auto">
+          <div className="mt-2 backdrop-blur-xl bg-gray-900/80 border border-white/10 rounded-2xl shadow-2xl max-h-96 overflow-y-auto">
             {loading ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-4 text-center text-gray-400">
                 Searching...
               </div>
             ) : results.length > 0 ? (
@@ -132,23 +173,23 @@ export default function SearchBar() {
                   <button
                     key={restaurant.id}
                     onClick={() => handleSelectRestaurant(restaurant)}
-                    className="w-full px-4 py-3 hover:bg-gray-100 text-left transition"
+                    className="w-full px-4 py-3 hover:bg-white/10 text-left transition"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-white">
                           {restaurant.name}
                         </div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {restaurant.address && (
-                            <span className="text-xs">{restaurant.address}</span>
-                          )}
-                        </div>
+                        {restaurant.address && (
+                          <div className="text-sm text-gray-400 mt-1">
+                            {restaurant.address}
+                          </div>
+                        )}
                       </div>
                       {restaurant.google_rating && (
                         <div className="flex items-center gap-1 ml-2">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium text-gray-700">
+                          <span className="text-sm font-medium text-white">
                             {restaurant.google_rating.toFixed(1)}
                           </span>
                         </div>
