@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, X, Star, SlidersHorizontal, Coffee, Globe, DollarSign, Vegan, Clock, Utensils } from 'lucide-react'
+import { Search, X, Star, SlidersHorizontal, Coffee, Van, University, Pizza, Soup, DollarSign, CookingPot, Drumstick, Vegan, Laptop, Clock, Utensils } from 'lucide-react'
 import { useMapStore } from '@/stores/mapStore'
 
 type Restaurant = {
@@ -17,12 +17,18 @@ type Restaurant = {
 }
 
 const filterChips = [
-  { icon: Coffee, label: 'Cafes' },
   { icon: Utensils, label: 'Restaurants' },
-  { icon: Vegan, label: 'Vegetarian' },
-  { icon: Globe, label: 'Middle Eastern' },
+  { icon: Coffee, label: 'Cafes' },
+  { icon: Laptop, label: 'Laptop Friendly' },   
+  { icon: Van, label: 'Food Trucks' },
+  { icon: University, label: 'On Campus' },
+  { icon: Pizza, label: 'Italian'},
+  { icon: Soup, label: 'East Asian' },
+  { icon: Drumstick, label: 'Middle Eastern' },
+  { icon: CookingPot, label: 'Indian' },
   { icon: DollarSign, label: 'Cheap Eats' },
   { icon: Clock, label: 'Open Now' },
+  { icon: Vegan, label: 'Vegetarian' },
 ]
 
 export default function SearchBar() {
@@ -112,7 +118,7 @@ export default function SearchBar() {
   return (
     <div className="absolute top-4 left-4 z-10 flex flex-col items-center" ref={searchRef}>
       <div className="w-full max-w-2xl">
-        <div className="backdrop-blur-xl bg-gray-900/60 border border-white/10 rounded-2xl shadow-2xl p-2">
+        <div className="backdrop-blur-xl bg-gray-900/30 border border-white/10 rounded-2xl shadow-2xl p-2">
           <div className="flex items-center px-3 py-2">
             <Search className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
             <input

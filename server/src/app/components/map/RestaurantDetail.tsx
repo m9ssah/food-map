@@ -122,7 +122,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     if (loading) {
         return (
-            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/70 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
+            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/30 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
                 <div className="flex items-center justify-center h-full">
                     <div className="text-gray-400">Loading...</div>
                 </div>
@@ -132,7 +132,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     if (error) {
         return (
-            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/70 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
+            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/30 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                     <div className="text-red-400">{error || 'Restaurant not found'}</div>
                     <button
@@ -148,7 +148,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     if (!data) {
         return (
-            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/70 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
+            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/30 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                     <div className="text-white">{error || 'Loading Restaurant'}</div>
                     <button
@@ -169,7 +169,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
         : null;
 
     return (
-      <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/70 border border-white/10 shadow-2xl z-50 overflow-y-auto rounded-2xl">
+      <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/30 border border-white/10 shadow-2xl z-50 overflow-y-auto rounded-2xl">
             {/* Photo */}
             {photoUrl && (
                 <div className="px-4 pt-4">
@@ -181,7 +181,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                     />
                     <button
                         onClick={onClose}
-                        className="absolute top-3 right-3 p-2 bg-gray-900/70 hover:bg-gray-700 rounded-lg transition"
+                        className="absolute top-3 right-3 p-2 bg-gray-900/30 hover:bg-gray-700 rounded-lg transition"
                         >
                         <X className="w-5 h-5 text-white" />
                     </button>
@@ -189,7 +189,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                 </div>
             )}
             {/* Header */}
-            <div className={`${photoUrl ? '' : 'sticky top-0 backdrop-blur-xl bg-gray-900/70'} p-4 flex items-start justify-between z-10`}>
+            <div className={`${photoUrl} p-4 flex items-start justify-between z-10`}>
                 <div>
                     <h2 className="text-2xl font-bold text-white">
                         {restaurant.name}
