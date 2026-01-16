@@ -16,12 +16,12 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+.scrollbar-hide {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.scrollbar-hide::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
 }

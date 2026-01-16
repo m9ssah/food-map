@@ -122,7 +122,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     if (loading) {
         return (
-            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/30 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
+            <div className="absolute top-4 right-4 bottom-4 !w-[500px] min-w-[500px] backdrop-blur-xl bg-gray-900/10 border border-white/10 shadow-2xl z-50 p-8 rounded-2xl">
                 <div className="flex items-center justify-center h-full">
                     <div className="text-gray-400">Loading...</div>
                 </div>
@@ -132,7 +132,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     if (error) {
         return (
-            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/30 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
+            <div className="absolute top-4 right-4 bottom-4 !w-[500px] min-w-[500px] backdrop-blur-xl bg-gray-900/10 border border-white/10 shadow-2xl z-50 p-8 rounded-2xl">
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                     <div className="text-red-400">{error || 'Restaurant not found'}</div>
                     <button
@@ -148,7 +148,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     if (!data) {
         return (
-            <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/30 border border-white/10 shadow-2xl z-50 p-6 rounded-2xl">
+            <div className="absolute top-4 right-4 bottom-4 !w-[500px] min-w-[500px] backdrop-blur-xl bg-gray-900/10 border border-white/10 shadow-2xl z-50 p-8 rounded-2xl">
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                     <div className="text-white">{error || 'Loading Restaurant'}</div>
                     <button
@@ -165,14 +165,14 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
     const { restaurant, categories = [], averageRating, totalRatings } = data;
 
     const photoUrl = restaurant.google_photo_reference 
-        ? `/api/google/photo?reference=${encodeURIComponent(restaurant.google_photo_reference)}&maxwidth=400`
+        ? `/api/google/photo?reference=${encodeURIComponent(restaurant.google_photo_reference)}&maxwidth=1000&maxheight=1000`
         : null;
 
     return (
-      <div className="absolute top-4 right-4 bottom-4 w-96 backdrop-blur-xl bg-gray-900/30 border border-white/10 shadow-2xl z-50 overflow-y-auto rounded-2xl">
+      <div className="absolute top-4 right-4 bottom-4 !w-[500px] min-w-[500px] backdrop-blur-xl bg-gray-900/10 border border-white/10 shadow-2xl z-50 overflow-y-auto rounded-2xl">
             {/* Photo */}
             {photoUrl && (
-                <div className="px-4 pt-4">
+                <div className="px-2 pt-2">
                     <div className="relative w-full h-64 overflow-hidden rounded-xl">
                         <img 
                             src={photoUrl} 
@@ -181,7 +181,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                     />
                     <button
                         onClick={onClose}
-                        className="absolute top-3 right-3 p-2 bg-gray-900/30 hover:bg-gray-700 rounded-lg transition"
+                        className="absolute top-3 right-3 p-2 bg-white/20 hover:bg-gray-700 rounded-lg transition"
                         >
                         <X className="w-5 h-5 text-white" />
                     </button>
@@ -269,7 +269,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                         {categories && categories.length > 0 && categories.map((category) => (
                             <span 
                                 key={category.id}
-                                className="inline-block px-3 py-1.5 bg-white/10 text-white text rounded-l border border-white/10"
+                                className="inline-block px-3 py-1.5 bg-white/10 text-white text rounded-full border border-white/10"
                             >
                                 {category.name}
                             </span>
@@ -301,10 +301,10 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                             <Clock className="w-4 h-4" />
                             Hours
                             {restaurant.google_opening_hours?.open_now !== undefined && (
-                              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              <span className={`text-xs px-2 py-0.5 rounded-full justify-center ${
                                 restaurant.google_opening_hours.open_now 
-                                ? 'bg-green-600 text-white' 
-                                : 'bg-red-600 text-white'
+                                ? 'bg-blue-600 text-white' 
+                                : 'bg-gray-600 text-white'
                               }`}>
                                     {restaurant.google_opening_hours.open_now ? 'Open Now' : 'Closed'}
                                 </span>

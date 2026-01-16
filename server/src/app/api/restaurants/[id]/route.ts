@@ -150,6 +150,33 @@ export async function GET(
                     .eq('id', restaurantId);
             }
         }
+        try {
+            const googlePlacesApi = process.env.NEXT_PUBLIC_GOOGLE_PLACES;
+            const openNowResponse = await fetch(
+                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${restaurant.google_place_id}&fields=opening_hours&key=${googlePlacesApi}`
+            );
+            const openNowData = await openNowResponse.json();
+            
+            if (openNowData.status === 'OK' && openNowData.result?.opening_hours) {
+                const freshOpeningHours = openNowData.result.opening_hours;
+                if (googleData?.google_opening_hours) {
+                    googleData.google_opening_hours = {
+                        ...googleData.google_opening_hours,
+                        open_now: freshOpeningHours.open_now,
+                    };
+                } else if (restaurant.google_opening_hours) {
+                    restaurant.google_opening_hours = {
+                        ...restaurant.google_opening_hours,
+                        open_now: freshOpeningHours.open_now,
+                    };
+                } else {
+                    if (!googleData) googleData = {};
+                    googleData.google_opening_hours = freshOpeningHours;
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching fresh open_now status:', err);
+        }
     }
 
     const responseData = {
@@ -159,9 +186,5 @@ export async function GET(
         totalRatings,
     };
 
-    return NextResponse.json(responseData, {
-        headers: {
-            'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-        }
-    });
+    return NextResponse.json(responseData);
 }
