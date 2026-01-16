@@ -3,12 +3,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Search, X, Star, SlidersHorizontal, Coffee, Van, University, Pizza, Soup, DollarSign, CookingPot, Drumstick, Vegan, Laptop, Clock, Utensils } from 'lucide-react'
-import { useMapStore } from '@/stores/mapStore'
+import { useMapStore, Spot } from '@/stores/mapStore'
 
 type Restaurant = {
   id: string
   name: string
-  category: string | null
   address: string | null
   latitude: number
   longitude: number
@@ -16,7 +15,20 @@ type Restaurant = {
   google_ratings_count: number | null
 }
 
-const filterChips = [
+type Category = {
+    id: string;
+    slug: string;
+    name: string;
+};
+
+type RestaurantData = {
+    restaurant: Restaurant;
+    categories?: Category[];
+    averageRating: number | null;
+    totalRatings: number;
+};
+
+const filterTags = [
   { icon: Utensils, label: 'Restaurants' },
   { icon: Coffee, label: 'Cafes' },
   { icon: Laptop, label: 'Laptop Friendly' },   
@@ -36,11 +48,91 @@ export default function SearchBar() {
   const [results, setResults] = useState<Restaurant[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [activeFilter, setActiveFilter] = useState<string | null>(null)
+  const [filterLoading, setFilterLoading] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   
   const supabase = createClient()
   const setSelectedSpot = useMapStore((state) => state.setSelectedSpot)
+  const activeFilter = useMapStore((state) => state.activeFilter)
+  const setActiveFilter = useMapStore((state) => state.setActiveFilter)
+  const setFilteredSpots = useMapStore((state) => state.setFilteredSpots)
+
+  // filter spots by category when a tag is clicked
+  useEffect(() => {
+    const fetchFilteredRestaurants = async () => {
+      if (!activeFilter) {
+        setFilteredSpots([])
+        return
+      }
+
+      setFilterLoading(true)
+      
+      if (!activeFilter) {
+        setFilteredSpots([])
+        setFilterLoading(false)
+        return
+      }
+
+      // fetch category id
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('name', activeFilter)
+        .single()
+
+      if (categoryError || !categoryData) {
+        console.error('Category lookup error:', categoryError)
+        setFilteredSpots([])
+        setFilterLoading(false)
+        return
+      }
+
+      const { data: restaurantCategories, error: rcError } = await supabase
+        .from('restaurant_categories')
+        .select('restaurant_id')
+        .eq('category_id', categoryData.id)
+
+      if (rcError || !restaurantCategories) {
+        console.error('Restaurant categories error:', rcError)
+        setFilteredSpots([])
+        setFilterLoading(false)
+        return
+      }
+
+      const restaurantIds = restaurantCategories.map(rc => rc.restaurant_id)
+      
+      if (restaurantIds.length === 0) {
+        setFilteredSpots([])
+        setFilterLoading(false)
+        return
+      }
+
+      const { data: restaurants, error: restaurantsError } = await supabase
+        .from('restaurants')
+        .select('id, name, latitude, longitude')
+        .in('id', restaurantIds)
+
+      if (restaurantsError) {
+        console.error('Restaurants fetch error:', restaurantsError)
+        setFilteredSpots([])
+        setFilterLoading(false)
+        return
+      }
+
+      const spots: Spot[] = restaurants?.map(r => ({
+        id: r.id,
+        name: r.name,
+        lat: r.latitude,
+        lng: r.longitude,
+        category: activeFilter,
+      })) || []
+
+      setFilteredSpots(spots)
+      setFilterLoading(false)
+    }
+
+    fetchFilteredRestaurants()
+  }, [activeFilter, supabase, setFilteredSpots])
 
   // search restaurants
   useEffect(() => {
@@ -101,24 +193,10 @@ export default function SearchBar() {
     setIsOpen(false)
   }
 
-  useEffect(() => {
-  const testConnection = async () => {
-    console.log('Testing Supabase connection...')
-    const { data, error, count } = await supabase
-      .from('restaurants')
-      .select('id, name', { count: 'exact' })
-      .limit(1)
-    
-    console.log('Test result:', { data, error, count })
-  }
-  
-  testConnection()
-}, [supabase])
-
   return (
     <div className="absolute top-4 left-4 z-10 flex flex-col items-center" ref={searchRef}>
       <div className="w-full max-w-2xl">
-        <div className="backdrop-blur-xl bg-gray-900/30 border border-white/10 rounded-2xl shadow-2xl p-2">
+        <div className="backdrop-blur-xl bg-gray-900/10 border border-white/10 rounded-2xl shadow-2xl p-2">
           <div className="flex items-center px-3 py-2">
             <Search className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
             <input
@@ -147,20 +225,21 @@ export default function SearchBar() {
             </a>
           </div>
           
-          {/* Filter Chips Row */}
+          {/* Filter Tags Row */}
           <div className="flex gap-2 px-2 pb-2 overflow-x-auto scrollbar-hide">
-            {filterChips.map((chip) => (
+
+            {filterTags.map((tag) => (
               <button
-                key={chip.label}
-                onClick={() => setActiveFilter(activeFilter === chip.label ? null : chip.label)}
+                key={tag.label}
+                onClick={() => setActiveFilter(activeFilter === tag.label ? null : tag.label)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition ${
-                  activeFilter === chip.label
+                  activeFilter === tag.label
                     ? 'bg-white text-gray-900'
                     : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
-                <chip.icon className="w-4 h-4" />
-                {chip.label}
+                <tag.icon className="w-4 h-4" />
+                {tag.label}
               </button>
             ))}
           </div>
@@ -168,7 +247,7 @@ export default function SearchBar() {
 
         {/* Search Results Dropdown */}
         {isOpen && (
-          <div className="mt-2 backdrop-blur-xl bg-gray-900/80 border border-white/10 rounded-2xl shadow-2xl max-h-96 overflow-y-auto">
+          <div className="mt-2 backdrop-blur-xl bg-gray-900/10 border border-white/10 rounded-2xl shadow-2xl max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-gray-400">
                 Searching...
