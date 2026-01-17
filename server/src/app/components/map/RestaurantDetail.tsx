@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { X, Star, MapPin, LogIn, Clock } from 'lucide-react';
+import { X, Star, MapPin, LogIn, Clock, MessageSquare } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { Inter } from 'next/font/google';
 
@@ -32,11 +32,21 @@ type Category = {
     name: string;
 };
 
+type Review = {
+    id: string;
+    score: number;
+    review: string | null;
+    created_at: string;
+    user_id: string;
+    username: string | null;
+};
+
 type RestaurantData = {
     restaurant: Restaurant;
     categories?: Category[];
     averageRating: number | null;
     totalRatings: number;
+    reviews?: Review[];
 };
 
 type Props = {
@@ -46,6 +56,8 @@ type Props = {
 
 const cache = new Map<string, { data: RestaurantData; timestamp: number }>();
 const CACHE_TIME = 5 * 60 * 1000; // 5 mins
+
+const userRatingCache = new Map<string, { rating: number; review: string; ratingId: string | null }>();
 
 function getCachedData(key: string): RestaurantData | null {
     const cached = cache.get(key);
@@ -64,6 +76,11 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
     const [loading, setLoading] = useState(!getCachedData(restaurantId));
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
+    const [userRating, setUserRating] = useState<number>(0);
+    const [reviewText, setReviewText] = useState<string>('');
+    const [existingRatingId, setExistingRatingId] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
     
     const abortControllerRef = useRef<AbortController | null>(null);
     const supabase = createClient();
@@ -106,11 +123,61 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
         }
     }, [restaurantId]);
 
+    const fetchUserRating = useCallback(async (userId: string) => {
+        const cacheKey = `${userId}-${restaurantId}`;
+        const cachedRating = userRatingCache.get(cacheKey);
+        if (cachedRating) {
+            setUserRating(cachedRating.rating);
+            setReviewText(cachedRating.review);
+            setExistingRatingId(cachedRating.ratingId);
+            return;
+        }
+
+        try {
+            const { data: ratingData, error } = await supabase
+                .from('ratings')
+                .select('id, score, review')
+                .eq('user_id', userId)
+                .eq('restaurant_id', restaurantId)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error fetching user rating:', error);
+                return;
+            }
+
+            if (ratingData) {
+                setUserRating(ratingData.score);
+                setReviewText(ratingData.review || '');
+                setExistingRatingId(ratingData.id);
+                // cache the rating
+                userRatingCache.set(cacheKey, {
+                    rating: ratingData.score,
+                    review: ratingData.review || '',
+                    ratingId: ratingData.id
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching user rating:', err);
+        }
+    }, [restaurantId, supabase]);
+
+    // reset rating state when restaurant changes
+    useEffect(() => {
+        setUserRating(0);
+        setReviewText('');
+        setExistingRatingId(null);
+        setSubmitSuccess(false);
+    }, [restaurantId]);
+
     useEffect(() => {
         fetchData();
 
         supabase.auth.getUser().then(({ data: { user } }) => {
             setUser(user);
+            if (user) {
+                fetchUserRating(user.id);
+            }
         });
 
         return () => {
@@ -118,7 +185,64 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                 abortControllerRef.current.abort();
             }
         };
-    }, [fetchData, supabase]);
+    }, [fetchData, fetchUserRating, supabase]);
+
+    // save ratings
+    const handleSubmitRating = async () => {
+        if (!user || userRating === 0) return;
+
+        setIsSubmitting(true);
+        setSubmitSuccess(false);
+
+        try {
+            const ratingData = {
+                user_id: user.id,
+                restaurant_id: restaurantId,
+                score: userRating,
+                review: reviewText.trim() || null,
+            };
+
+            let result;
+            if (existingRatingId) {
+                result = await supabase
+                    .from('ratings')
+                    .update({ score: userRating, review: reviewText.trim() || null })
+                    .eq('id', existingRatingId)
+                    .select()
+                    .single();
+            } else {
+                result = await supabase
+                    .from('ratings')
+                    .insert(ratingData)
+                    .select()
+                    .single();
+            }
+
+            if (result.error) {
+                console.error('Error saving rating:', result.error);
+                return;
+            }
+
+            const cacheKey = `${user.id}-${restaurantId}`;
+            userRatingCache.set(cacheKey, {
+                rating: userRating,
+                review: reviewText,
+                ratingId: result.data.id
+            });
+            setExistingRatingId(result.data.id);
+            setSubmitSuccess(true);
+
+            // invalidate restaurant data cache to refresh ratings
+            cache.delete(restaurantId);
+            fetchData();
+
+            setTimeout(() => setSubmitSuccess(false), 3000);
+        } catch (err) {
+            console.error('Error submitting rating:', err);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -162,7 +286,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
         )
     }
 
-    const { restaurant, categories = [], averageRating, totalRatings } = data;
+    const { restaurant, categories = [], averageRating, totalRatings, reviews = [] } = data;
 
     const photoUrl = restaurant.google_photo_reference 
         ? `/api/google/photo?reference=${encodeURIComponent(restaurant.google_photo_reference)}&maxwidth=1000&maxheight=1000`
@@ -191,7 +315,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
             {/* Header */}
             <div className={`${photoUrl} p-4 flex items-start justify-between z-10`}>
                 <div>
-                    <h2 className="text-2xl font-bold text-white">
+                    <h2 className="text-4xl font-bold text-white mb-1">
                         {restaurant.name}
                     </h2>
                     {/* re add price range later */}
@@ -286,13 +410,13 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                       </div>
                   )}
 
-                {/* Description */}
+                {/* Description
                 {restaurant.description && (
                   <div>
                         <h3 className="text-white font-semibold mb-2">About</h3>
                         <p className="text-gray-300">{restaurant.description}</p>
                     </div>
-                )}
+                )} */}
 
                 {/* Hours */}
                 {(restaurant.hours || restaurant.google_opening_hours) && (
@@ -323,28 +447,124 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                 )}
 
 
-                {/* Rating */}
+                {/* Reviews */}
                 <div className="pt-4 border-t border-white/10">
                     {user ? (
-                      <p className="text-gray-400 text-sm text-center">
-                            Rating feature coming soon!
-                        </p>
+                      <div className="text-white text-center">
+                            <div className="text-2xl font-semibold mb-2 gap-4 flex items-center">
+                                Your Rating
+                                {existingRatingId && (
+                                    <span className="text-xs px-2 py-0.5 bg-green-600/20 text-green-400 rounded-full">
+                                        Saved
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center justify-center">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        onClick={() => setUserRating(star)}
+                                        className="p-1 hover:scale-110 transition-transform focus:outline-none"
+                                    >
+                                        <Star
+                                            className={`w-13 h-13 ${star <= (userRating || 0)
+                                                ? 'fill-yellow-400 text-yellow-400'
+                                                : 'text-white/70 hover:text-white'}`} />
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="text-gray-500 mt-2">
+                                {userRating > 0 ? '' : "Select a rating"}
+                            </div>
+                            <textarea
+                                value={reviewText}
+                                onChange={(e) => setReviewText(e.target.value)}
+                                placeholder="Share your experience..."
+                                rows={3}
+                                className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none transition-all mt-3"
+                            />
+                            <button
+                                onClick={handleSubmitRating}
+                                disabled={userRating === 0 || isSubmitting}
+                                className={`w-full py-2.5 rounded-xl font-medium transition-all mt-3 ${
+                                    userRating > 0 && !isSubmitting
+                                        ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"
+                                        : "bg-gray-800 text-gray-500 cursor-not-allowed"
+                                }`}
+                            >
+                                {isSubmitting 
+                                    ? 'Saving...' 
+                                    : submitSuccess 
+                                        ? '✓ Saved!' 
+                                        : existingRatingId 
+                                            ? 'Update Review' 
+                                            : 'Post Review'}
+                            </button>
+                        </div>
                     ) : (
-                      <div className="text-center">
-                            <p className="text-gray-400 text-sm mb-3">
-                                Sign in to rate this restaurant
-                            </p>
+                        /* Logged Out State */
+                        <div className="flex flex-col items-center justify-center py-4 gap-3 bg-white/5 rounded-xl border border-white/5">
+                            <p className="text-gray-400 text-sm">Sign in to leave a review</p>
                             <a
                                 href="/login"
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition"
-                                >
+                                className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-500 transition-colors shadow-lg shadow-blue-900/20"
+                            >
                                 <LogIn className="w-4 h-4" />
-                                Sign In to Rate
+                                Sign In
                             </a>
                         </div>
                     )}
                 </div>
+
+                {/* Reviews wall */}
+                {reviews.length > 0 && (
+                    <div className="pt-4 border-t border-white/10 pb-6">
+                        <h3 className="text-white text-xl font-semibold mb-4 flex items-center gap-2">
+                            <MessageSquare className="w-5 h-5" />
+                            Reviews ({reviews.length})
+                        </h3>
+                        <div className="space-y-4">
+                            {reviews.map((review) => (
+                                <div 
+                                    key={review.id} 
+                                    className={`bg-white/5 rounded-xl p-4 border ${
+                                        user && review.user_id === user.id 
+                                            ? 'border-blue-500/30' 
+                                            : 'border-white/5'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                            <span className="text-white font-medium">
+                                                {review.username || 'Anonymous'}
+                                                {user && review.user_id === user.id && (
+                                                    <span className="ml-2 text-xs px-2 py-0.5 bg-blue-600/20 text-blue-400 rounded-full">
+                                                        You
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <Star
+                                                    key={star}
+                                                    className={`w-4 h-4 ${
+                                                        star <= review.score
+                                                            ? 'fill-yellow-400 text-yellow-400'
+                                                            : 'text-white/70'
+                                                    }`}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                    {review.review && (
+                                        <p className="text-gray-300 text-sm mb-2">{review.review}</p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
-        </div>
-    );
+      </div>);
 }

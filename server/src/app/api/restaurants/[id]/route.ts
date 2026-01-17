@@ -26,9 +26,10 @@ type RestaurantData = {
 type RatingWithProfile = {
     id: string;
     score: number;
+    review: string | null;
     created_at: string;
     user_id: string;
-    restaurant_id: string;
+    username: string | null;
 };
 
 type Category = {
@@ -97,8 +98,18 @@ export async function GET(
             .single(),
         supabase
             .from('ratings')
-            .select('score')
-            .eq('restaurant_id', restaurantId),
+            .select(`
+                id,
+                score,
+                review,
+                created_at,
+                user_id,
+                profiles (
+                    username
+                )
+            `)
+            .eq('restaurant_id', restaurantId)
+            .order('created_at', { ascending: false }),
         supabase
             .from('restaurant_categories')
             .select('*')
@@ -127,9 +138,19 @@ export async function GET(
     // average rating
     let averageRating: number | null = null;
     let totalRatings = 0;
+    const reviews: RatingWithProfile[] = [];
+    
     if (ratingsResult.data && ratingsResult.data.length > 0) {
         averageRating = ratingsResult.data.reduce((sum, r) => sum + r.score, 0) / ratingsResult.data.length;
         totalRatings = ratingsResult.data.length;
+        reviews.push(...ratingsResult.data.map((r: any) => ({
+            id: r.id,
+            score: r.score,
+            review: r.review,
+            created_at: r.created_at,
+            user_id: r.user_id,
+            username: r.profiles?.username || null,
+        })));
     }
 
     let googleData: Partial<RestaurantData> | null = null;
@@ -184,6 +205,7 @@ export async function GET(
         categories,
         averageRating,
         totalRatings,
+        reviews,
     };
 
     return NextResponse.json(responseData);

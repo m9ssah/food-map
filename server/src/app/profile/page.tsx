@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { Star, ArrowLeft, Heart, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Heart, Star } from 'lucide-react';
 import Link from 'next/link';
 import LogoutButton from '../components/LogoutButton';
 import Image from 'next/image';
@@ -8,14 +8,11 @@ import ProfileHeader from '../components/ProfileHeader';
 
 type UserRating = {
   id: string;
-  rating: number;
-  comment: string | null;
+  score: number;
+  review: string | null;
   created_at: string;
-  restaurants: {
-    id: string;
-    name: string;
-    category: string | null;
-  } | null;
+  restaurant_id: string;
+  restaurant_name: string | null;
 };
 
 export default async function ProfilePage() {
@@ -39,19 +36,23 @@ export default async function ProfilePage() {
     .from('ratings')
     .select(`
       id,
-      rating,
-      comment,
+      score,
+      review,
       created_at,
-      restaurants (
-        id,
-        name,
-        category
-      )
+      restaurant_id,
+      restaurants ( name )
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  const ratings = (userRatings || []) as UserRating[];
+  const ratings: UserRating[] = (userRatings || []).map((r: any) => ({
+    id: r.id,
+    score: r.score,
+    review: r.review,
+    created_at: r.created_at,
+    restaurant_id: r.restaurant_id,
+    restaurant_name: r.restaurants?.name || null,
+  }));
 
 return (
     <div className="min-h-screen bg-[#2C3E50]">
@@ -103,18 +104,21 @@ return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {ratings.slice(0, 4).map((rating) => (
                 <div key={rating.id} className="bg-[#A8C5DD] rounded-2xl p-4">
-                  <div className="mb-3">
+                  <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-gray-800 font-semibold">
                         {profile?.username || 'You'}
                       </span>
                       <span className="text-gray-600">reviewed</span>
                       <span className="text-gray-800 font-semibold">
-                        {rating.restaurants?.name}
+                        {rating.restaurant_name || 'Unknown'}
                       </span>
                       <div className="flex">
-                        {[...Array(rating.rating)].map((_, i) => (
-                          <span key={i}>⭐</span>
+                        {[...Array(rating.score)].map((_, i) => (
+                          <span key={i}><
+                            Star 
+                            className="w-4 h-4 text-yellow-400 fill-current"
+                          /></span>
                         ))}
                       </div>
                     </div>
@@ -125,9 +129,9 @@ return (
                     <span className="text-gray-400 text-sm">Photo coming soon</span>
                   </div>
 
-                  {/* Comment */}
-                  {rating.comment && (
-                    <p className="text-gray-800 mb-3">{rating.comment}</p>
+                  {/* Review */}
+                  {rating.review && (
+                    <p className="text-gray-800">{rating.review}</p>
                   )}
 
                   {/* Footer */}
@@ -160,7 +164,7 @@ return (
           <div className="bg-[#1E2A38] rounded-2xl overflow-hidden">
             {ratings.length > 0 ? (
               ratings
-                .filter((r) => r.rating >= 4)
+                .filter((r) => r.score >= 4)
                 .slice(0, 3)
                 .map((rating, index) => (
                   <div
@@ -171,7 +175,7 @@ return (
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-white font-semibold">
-                        {rating.restaurants?.name}
+                        {rating.restaurant_name || 'Unknown'}
                       </span>
                       <Heart className="w-5 h-5 text-gray-400" />
                     </div>
