@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, X, Star, SlidersHorizontal, Coffee, Van, University, Pizza, Soup, DollarSign, CookingPot, Drumstick, Vegan, Laptop, Clock, Utensils, Beef, CakeSlice, IceCreamCone } from 'lucide-react'
+import { Search, X, Star, SlidersHorizontal, Coffee, Van, University, Pizza, Soup, DollarSign, CookingPot, Drumstick, Vegan, Laptop, Clock, Utensils, Beef, CakeSlice, IceCreamCone, ChevronLeft } from 'lucide-react'
 import { useMapStore, Spot } from '@/stores/mapStore'
 
 type Restaurant = {
@@ -13,6 +13,7 @@ type Restaurant = {
   longitude: number
   google_rating: number | null
   google_ratings_count: number | null
+  google_place_id?: string | null
 }
 
 type Category = {
@@ -44,7 +45,33 @@ const filterTags = [
   { icon: Vegan, label: 'Vegetarian' },
   { icon: Beef, label: 'Halal' },
   { icon: CakeSlice, label: 'Bakery' },
-  
+]
+
+const heroCategories = [    // TODO: add more later
+  { 
+    label: 'Restaurants', 
+    icon: Utensils,
+    image: 'https://torontolife.mblycdn.com/tl/resized/2023/03/w1280/DSC0690.jpg',
+    description: 'Dine-in spots'
+  },
+  { 
+    label: 'Cafes', 
+    icon: Coffee,
+    image: 'https://media.blogto.com/uploads/2024/07/26/1722027463-20240726-Rooms17Baldwin-6.jpg?w=1400&cmd=resize&height=2500&quality=70',
+    description: 'Coffee & snacks'
+  },
+  { 
+    label: 'Food Trucks', 
+    icon: Van,
+    image: 'https://images.unsplash.com/photo-1565123409695-7b5ef63a2efb?w=800&q=80',
+    description: 'Street eats'
+  },
+  { 
+    label: 'Dessert', 
+    icon: IceCreamCone,
+    image: 'https://blogto-production2-baselayer-display.blogto.com/listings/20230922-Kream-12.jpg?w=2048&cmd=resize_then_crop&height=1365&format=auto',
+    description: 'Sweet treats'
+  },
 ]
 const categoryIdCache: Record<string, string> = {}
 
@@ -55,6 +82,8 @@ export default function SearchBar() {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [filterLoading, setFilterLoading] = useState(false)
+  const [showCategoryView, setShowCategoryView] = useState(false)
+  const [restaurantPhotos, setRestaurantPhotos] = useState<Record<string, string>>({})
   const searchRef = useRef<HTMLDivElement>(null)
   
   const supabase = useMemo(() => createClient(), [])
@@ -64,6 +93,54 @@ export default function SearchBar() {
   const setActiveFilter = useMapStore((state) => state.setActiveFilter)
   const setFilteredSpots = useMapStore((state) => state.setFilteredSpots)
 
+  // fetch photos for restaurants when filtered results change TODO fix
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      if (!filteredResults.length || !showCategoryView) return
+      
+      const photosToFetch = filteredResults.filter(
+        r => r.google_place_id && !restaurantPhotos[r.id]
+      )
+      
+      const photoPromises = photosToFetch.map(async (restaurant) => {
+        if (!restaurant.google_place_id) return null
+        try {
+          const response = await fetch(`/api/google/photo?placeId=${restaurant.google_place_id}&maxWidth=400`)
+          if (response.ok) {
+            const data = await response.json()
+            return { id: restaurant.id, url: data.photoUrl }
+          }
+        } catch (err) {
+          console.error('Error fetching photo:', err)
+        }
+        return null
+      })
+      
+      const results = await Promise.all(photoPromises)
+      const newPhotos: Record<string, string> = {}
+      results.forEach(result => {
+        if (result) newPhotos[result.id] = result.url
+      })
+      
+      if (Object.keys(newPhotos).length > 0) {
+        setRestaurantPhotos(prev => ({ ...prev, ...newPhotos }))
+      }
+    }
+    
+    fetchPhotos()
+  }, [filteredResults, showCategoryView])
+
+  // handle card category click
+  const handleCardClick = (categoryLabel: string) => {
+    setActiveFilter(activeFilter === categoryLabel ? null : categoryLabel)
+    setShowCategoryView(true)
+    setIsOpen(false)
+  }
+
+  const handleBackFromCategoryView = () => {
+    setShowCategoryView(false)
+    setActiveFilter(null)
+  }
   // filter spots by category when a tag is clicked
   useEffect(() => {
     const fetchFilteredRestaurants = async () => {
@@ -159,7 +236,7 @@ export default function SearchBar() {
 
       const { data: restaurants, error: restaurantsError } = await supabase
         .from('restaurants')
-        .select('id, name, address, latitude, longitude, google_rating, google_ratings_count')
+        .select('id, name, address, latitude, longitude, google_rating, google_ratings_count, google_place_id')
         .in('id', restaurantIds)
 
       if (restaurantsError) {
@@ -246,8 +323,13 @@ export default function SearchBar() {
     setIsOpen(false)
   }
 
+  const getFilterIcon = (label: string) => {
+    const tag = filterTags.find(t => t.label === label)
+    return tag?.icon || Utensils
+  }
+
   return (
-    <div className="absolute top-6 left-6 z-10 flex flex-col items-center" ref={searchRef}>
+    <div className="absolute top-6 left-6 z-10 flex flex-col" ref={searchRef}>
       <div className="w-full max-w-4xl">
         <div className="backdrop-blur-xl bg-gray-900/5 border border-white/10 rounded-2xl shadow-2xl p-1">
           <div className="flex items-center px-4 py-5">
@@ -284,7 +366,10 @@ export default function SearchBar() {
             {filterTags.map((tag) => (
               <button
                 key={tag.label}
-                onClick={() => setActiveFilter(activeFilter === tag.label ? null : tag.label)}
+                onClick={() => {
+                  setActiveFilter(activeFilter === tag.label ? null : tag.label)
+                  setShowCategoryView(false)
+                }}
                 className={`flex items-center gap-1.5 px-4.5 py-3 bg-white/10 border border-white/10 rounded-full text-sm whitespace-nowrap transition${
                   activeFilter === tag.label
                     ? 'bg-white text-gray-900 bg-white/90'
@@ -299,14 +384,13 @@ export default function SearchBar() {
         </div>
 
         {/* Results Dropdown */}
-        {(isOpen || (activeFilter && filteredResults.length > 0)) && (
+        {isOpen && (
           <div className="mt-2 backdrop-blur-xl bg-gray-900/5 border border-white/10 rounded-2xl shadow-2xl max-h-96 overflow-y-auto scrollbar-hide">
-            {(loading || filterLoading) ? (
+            {loading ? (
               <div className="p-4 text-center text-gray-400">
-                {loading ? 'Searching...' : 'Loading...'}
+                Searching...
               </div>
-            ) : isOpen && results.length > 0 ? (
-              // search results r priority
+            ) : results.length > 0 ? (
               <div className="py-2">
                 {results.map((restaurant) => (
                   <button
@@ -337,12 +421,134 @@ export default function SearchBar() {
                   </button>
                 ))}
               </div>
-            ) : isOpen && query.trim().length >= 2 ? (
+            ) : query.trim().length >= 2 ? (
               <div className="p-4 text-center text-gray-500">
                 No restaurants found for "{query}"
               </div>
-            ) : activeFilter && filteredResults.length > 0 ? (
-              // category filter results
+            ) : null}
+          </div>
+        )}
+
+        {/* Category Results View Cards */}
+        {showCategoryView && activeFilter ? (
+          <div className="mt-4 backdrop-blur-xl bg-gray-900/10 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            {/* header */}
+            <div className="flex items-center gap-3 p-4 border-b border-white/10">
+              <button 
+                onClick={handleBackFromCategoryView}
+                className="p-2 rounded-full hover:bg-white/10 transition"
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </button>
+              {(() => {
+                const IconComponent = getFilterIcon(activeFilter)
+                return <IconComponent className="w-6 h-6 text-white" />
+              })()}
+              <h2 className="text-xl font-bold text-white">{activeFilter}</h2>
+              <span className="text-sm text-gray-400 ml-auto">
+                {filteredResults.length} spot{filteredResults.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            
+            {/* Category Cards */}
+            <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-4">
+              {filterLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                </div>
+              ) : filteredResults.length > 0 ? (
+                filteredResults.map((restaurant) => (
+                  <button
+                    key={restaurant.id}
+                    onClick={() => handleSelectRestaurant(restaurant)}
+                    className="w-full group relative overflow-hidden rounded-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    {/* Background Image */}
+                    <div className="relative h-70 w-full">
+                      {restaurantPhotos[restaurant.id] ? (
+                        <img 
+                          src={restaurantPhotos[restaurant.id]} 
+                          alt={restaurant.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+                          <Utensils className="w-12 h-12 text-gray-500" />
+                        </div>
+                      )}
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 ">
+                      <div className="flex items-end justify-between">
+                        <div className="flex-1 text-left">
+                          <h3 className="font-bold text-white text-lg leading-tight">
+                            {restaurant.name}
+                          </h3>
+                          {restaurant.address && (
+                            <p className="text-sm text-gray-300 mt-1 line-clamp-1">
+                              {restaurant.address}
+                            </p>
+                          )}
+                        </div>
+                        {restaurant.google_rating && (
+                          <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-lg ml-2">
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm font-semibold text-white">
+                              {restaurant.google_rating.toFixed(1)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="text-center py-12 text-gray-400">
+                  No spots found for "{activeFilter}"
+                </div>
+              )}
+            </div>
+          </div>
+        ) : !isOpen && !showCategoryView ? (
+          /* cards shown when no search or category view is active */
+          <div className="mt-8 space-y-3 backdrop-blur-xl bg-gray-900/10 border border-white/10 shadow-2xl z-50 overflow-y-auto rounded-2xl p-4">
+            {heroCategories.map((category) => (
+              <button
+                key={category.label}
+                onClick={() => handleCardClick(category.label)}
+                className="relative w-full group overflow-hidden rounded-2xl h-70 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {/* background */}
+                <img 
+                  src={category.image} 
+                  alt={category.label}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                {/* gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+                
+                {/* content */}
+                <div className="relative h-full flex items-center p-5">
+                  <category.icon className="w-8 h-8 text-white mr-4" />
+                  <div className="text-left">
+                    <h3 className="text-xl font-bold text-white">{category.label}</h3>
+                    <p className="text-sm text-gray-300">{category.description}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {/* Small category  buttons */}
+        {!showCategoryView && activeFilter && filteredResults.length > 0 && !isOpen && (
+          <div className="mt-2 backdrop-blur-xl bg-gray-900/5 border border-white/10 rounded-2xl shadow-2xl max-h-96 overflow-y-auto scrollbar-hide">
+            {filterLoading ? (
+              <div className="p-4 text-center text-gray-400">Loading...</div>
+            ) : (
               <div className="py-2">
                 <div className="px-4 py-2 text-xs text-gray-400 border-b border-white/10">
                   {filteredResults.length} {activeFilter} spot{filteredResults.length !== 1 ? 's' : ''}
@@ -376,11 +582,7 @@ export default function SearchBar() {
                   </button>
                 ))}
               </div>
-            ) : activeFilter ? (
-              <div className="p-4 text-center text-gray-500">
-                No spots found for "{activeFilter}"
-              </div>
-            ) : null}
+            )}
           </div>
         )}
       </div>
