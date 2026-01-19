@@ -14,6 +14,8 @@ type Restaurant = {
   google_rating: number | null
   google_ratings_count: number | null
   google_place_id?: string | null
+  google_photo_reference?: string;
+
 }
 
 type Category = {
@@ -83,7 +85,6 @@ export default function SearchBar() {
   const [loading, setLoading] = useState(false)
   const [filterLoading, setFilterLoading] = useState(false)
   const [showCategoryView, setShowCategoryView] = useState(false)
-  const [restaurantPhotos, setRestaurantPhotos] = useState<Record<string, string>>({})
   const searchRef = useRef<HTMLDivElement>(null)
   
   const supabase = useMemo(() => createClient(), [])
@@ -93,42 +94,11 @@ export default function SearchBar() {
   const setActiveFilter = useMapStore((state) => state.setActiveFilter)
   const setFilteredSpots = useMapStore((state) => state.setFilteredSpots)
 
-  // fetch photos for restaurants when filtered results change TODO fix
-  useEffect(() => {
-    const fetchPhotos = async () => {
-      if (!filteredResults.length || !showCategoryView) return
-      
-      const photosToFetch = filteredResults.filter(
-        r => r.google_place_id && !restaurantPhotos[r.id]
-      )
-      
-      const photoPromises = photosToFetch.map(async (restaurant) => {
-        if (!restaurant.google_place_id) return null
-        try {
-          const response = await fetch(`/api/google/photo?placeId=${restaurant.google_place_id}&maxWidth=400`)
-          if (response.ok) {
-            const data = await response.json()
-            return { id: restaurant.id, url: data.photoUrl }
-          }
-        } catch (err) {
-          console.error('Error fetching photo:', err)
-        }
-        return null
-      })
-      
-      const results = await Promise.all(photoPromises)
-      const newPhotos: Record<string, string> = {}
-      results.forEach(result => {
-        if (result) newPhotos[result.id] = result.url
-      })
-      
-      if (Object.keys(newPhotos).length > 0) {
-        setRestaurantPhotos(prev => ({ ...prev, ...newPhotos }))
-      }
-    }
-    
-    fetchPhotos()
-  }, [filteredResults, showCategoryView])
+  const getPhotoUrl = (restaurant: Restaurant) => {
+   return restaurant.google_photo_reference 
+        ? `/api/google/photo?reference=${encodeURIComponent(restaurant.google_photo_reference)}&maxwidth=800&maxheight=800`
+        : null;
+  }
 
   // handle card category click
   const handleCardClick = (categoryLabel: string) => {
@@ -329,8 +299,8 @@ export default function SearchBar() {
   }
 
   return (
-    <div className="absolute top-6 left-6 z-10 flex flex-col" ref={searchRef}>
-      <div className="w-full max-w-4xl">
+    <div className="absolute top-6 left-6 bottom-4 z-10 flex flex-col" ref={searchRef}>
+      <div className="w-full max-w-4xl flex flex-col min-h-0 max-h-full">
         <div className="backdrop-blur-xl bg-gray-900/5 border border-white/10 rounded-2xl shadow-2xl p-1">
           <div className="flex items-center px-4 py-5">
             <Search className="w-9 h-9 text-gray-400 mr-3 flex-shrink-0" />
@@ -431,7 +401,7 @@ export default function SearchBar() {
 
         {/* Category Results View Cards */}
         {showCategoryView && activeFilter ? (
-          <div className="mt-4 backdrop-blur-xl bg-gray-900/10 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="mt-4 backdrop-blur-xl bg-gray-900/10 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col min-h-0 flex-1">
             {/* header */}
             <div className="flex items-center gap-3 p-4 border-b border-white/10">
               <button 
@@ -465,9 +435,9 @@ export default function SearchBar() {
                   >
                     {/* Background Image */}
                     <div className="relative h-70 w-full">
-                      {restaurantPhotos[restaurant.id] ? (
+                      {getPhotoUrl(restaurant) ? (
                         <img 
-                          src={restaurantPhotos[restaurant.id]} 
+                          src={getPhotoUrl(restaurant)!} 
                           alt={restaurant.name}
                           className="w-full h-full object-cover"
                         />
@@ -514,7 +484,7 @@ export default function SearchBar() {
           </div>
         ) : !isOpen && !showCategoryView ? (
           /* cards shown when no search or category view is active */
-          <div className="mt-8 space-y-3 backdrop-blur-xl bg-gray-900/10 border border-white/10 shadow-2xl z-50 overflow-y-auto rounded-2xl p-4">
+          <div className="mt-4 space-y-3 backdrop-blur-xl bg-gray-900/10 border border-white/10 shadow-2xl z-50 overflow-y-auto scrollbar-hide rounded-2xl p-4 flex-1 min-h-0">
             {heroCategories.map((category) => (
               <button
                 key={category.label}
