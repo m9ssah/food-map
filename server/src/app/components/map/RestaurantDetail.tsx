@@ -288,9 +288,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
 
     const { restaurant, categories = [], averageRating, totalRatings, reviews = [] } = data;
 
-    const photoUrl = restaurant.google_photo_reference 
-        ? `/api/google/photo?reference=${encodeURIComponent(restaurant.google_photo_reference)}&maxwidth=1000&maxheight=1000`
-        : null;
+    const photoUrl = restaurant.google_photo_reference ? `/api/google/photo?reference=${encodeURIComponent(restaurant.google_photo_reference)}&maxwidth=800&maxheight=800` : null;
 
     return (
       <div className="absolute top-4 right-4 bottom-4 !w-[500px] min-w-[500px] backdrop-blur-xl bg-gray-900/10 border border-white/10 shadow-2xl z-50 overflow-y-auto rounded-2xl">
@@ -318,7 +316,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                     <h2 className="text-4xl font-bold text-white mb-1">
                         {restaurant.name}
                     </h2>
-                    {/* re add price range later */}
+                    {/* TODO re add price range later */}
                 </div>
                 {!photoUrl && (
                     <button

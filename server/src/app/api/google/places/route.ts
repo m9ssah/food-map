@@ -7,7 +7,7 @@ const getCachedGooglePlacesData = unstable_cache(
         const googlePlacesApi = process.env.NEXT_PUBLIC_GOOGLE_PLACES;
 
         const googleResponse = await fetch(
-            `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=opening_hours,rating,user_ratings_total,price_level&key=${googlePlacesApi}`,
+            `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=opening_hours,rating,user_ratings_total,price_level,photos&key=${googlePlacesApi}`,
             { 
                 next: { revalidate: 3600 }
             }
@@ -20,11 +20,14 @@ const getCachedGooglePlacesData = unstable_cache(
             return null;
         }
 
+        const photoReference = googleData.result.photos?.[0]?.photo_reference || null;
+
         return {
             google_rating: googleData.result.rating,
             google_ratings_count: googleData.result.user_ratings_total,
             google_price_level: googleData.result.price_level,
             google_opening_hours: googleData.result.opening_hours,
+            google_photo_reference: photoReference,
         };
     },
     ['google-places'],
