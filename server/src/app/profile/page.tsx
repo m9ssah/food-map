@@ -54,10 +54,10 @@ export default async function ProfilePage() {
     restaurant_name: r.restaurants?.name || null,
   }));
 
-return (
-    <div className="min-h-screen bg-[#2C3E50]">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Header */}
-      <div className="bg-[#34495E] border-b border-gray-700">
+      <div className="backdrop-blur-xl bg-gray-900/30 border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link
             href="/"
@@ -71,18 +71,20 @@ return (
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Profile Header - Now using the client component */}
-        <ProfileHeader 
-          userId={user.id}
-          initialUsername={profile?.username || user.email?.split('@')[0] || 'User'}
-          initialBio={profile?.bio}
-        />
+        {/* Profile Header */}
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-6 mb-6">
+          <ProfileHeader 
+            userId={user.id}
+            initialUsername={profile?.username || user.email?.split('@')[0] || 'User'}
+            initialBio={profile?.bio}
+          />
+        </div>
 
         {/* Stats */}
         <div className="flex gap-3 mb-8">
-          <div className="px-6 py-2 bg-white rounded-full">
-            <span className="font-bold text-gray-900">{ratings.length}</span>
-            <span className="text-gray-600 ml-1">Reviews</span>
+          <div className="backdrop-blur-xl bg-white/10 border border-white/10 rounded-full px-6 py-3 shadow-lg">
+            <span className="font-bold text-white text-lg">{ratings.length}</span>
+            <span className="text-gray-300 ml-2">Reviews</span>
           </div>
         </div>
 
@@ -91,11 +93,11 @@ return (
           <h2 className="text-2xl font-bold text-white mb-4">Recent Activity</h2>
           
           {ratings.length === 0 ? (
-            <div className="bg-[#4A5F7F] rounded-2xl p-8 text-center">
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center shadow-xl">
               <p className="text-gray-300 mb-4">No reviews yet</p>
               <Link
                 href="/"
-                className="inline-block px-6 py-2 bg-white text-[#002F65] font-bold rounded-lg hover:bg-[#95B4D8] transition"
+                className="inline-block px-6 py-2 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/30 transition border border-white/20"
               >
                 Explore Restaurants
               </Link>
@@ -103,39 +105,39 @@ return (
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {ratings.slice(0, 4).map((rating) => (
-                <div key={rating.id} className="bg-[#A8C5DD] rounded-2xl p-4">
+                <div key={rating.id} className="backdrop-blur-xl bg-white/10 border border-white/10 rounded-2xl p-4 shadow-xl hover:bg-white/15 transition">
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-gray-800 font-semibold">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <span className="text-white font-semibold">
                         {profile?.username || 'You'}
                       </span>
-                      <span className="text-gray-600">reviewed</span>
-                      <span className="text-gray-800 font-semibold">
+                      <span className="text-gray-400">reviewed</span>
+                      <span className="text-white font-semibold">
                         {rating.restaurant_name || 'Unknown'}
                       </span>
                       <div className="flex">
                         {[...Array(rating.score)].map((_, i) => (
-                          <span key={i}><
-                            Star 
+                          <Star 
+                            key={i}
                             className="w-4 h-4 text-yellow-400 fill-current"
-                          /></span>
+                          />
                         ))}
                       </div>
                     </div>
                   </div>
 
                   {/* Placeholder for image */}
-                  <div className="bg-white rounded-lg h-32 mb-3 flex items-center justify-center">
+                  <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg h-32 mb-3 flex items-center justify-center">
                     <span className="text-gray-400 text-sm">Photo coming soon</span>
                   </div>
 
                   {/* Review */}
                   {rating.review && (
-                    <p className="text-gray-800">{rating.review}</p>
+                    <p className="text-gray-200 mb-3">{rating.review}</p>
                   )}
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between text-gray-600 text-sm">
+                  <div className="flex items-center justify-between text-gray-400 text-sm border-t border-white/10 pt-3">
                     <span>{getTimeAgo(rating.created_at)}</span>
                     <div className="flex items-center gap-1">
                       <Heart className="w-4 h-4" />
@@ -151,7 +153,7 @@ return (
         {/* Food Wishlist */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4">Food Wishlist</h2>
-          <div className="bg-[#1E2A38] rounded-2xl overflow-hidden">
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
             <div className="p-6 text-center text-gray-400">
               Wishlist feature coming soon!
             </div>
@@ -161,7 +163,7 @@ return (
         {/* Campus Favorites */}
         <div>
           <h2 className="text-2xl font-bold text-white mb-4">Campus Favorites</h2>
-          <div className="bg-[#1E2A38] rounded-2xl overflow-hidden">
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
             {ratings.length > 0 ? (
               ratings
                 .filter((r) => r.score >= 4)
@@ -169,8 +171,8 @@ return (
                 .map((rating, index) => (
                   <div
                     key={rating.id}
-                    className={`p-4 flex items-center justify-between ${
-                      index !== 0 ? 'border-t border-gray-700' : ''
+                    className={`p-4 flex items-center justify-between hover:bg-white/5 transition ${
+                      index !== 0 ? 'border-t border-white/10' : ''
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -181,7 +183,7 @@ return (
                     </div>
                     <Link
                       href="/"
-                      className="px-4 py-2 bg-[#A8C5DD] text-gray-900 rounded-lg hover:bg-[#9BB5CD] transition"
+                      className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition border border-white/20"
                     >
                       View Review
                     </Link>
