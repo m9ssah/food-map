@@ -7,4 +7,4 @@ You can easily browse through countless options by picking your favourite catego
 
 Not sure if a spot is actually good? Check its community ratings to get more reliable input from fellow students.
 
-[image.png](https://github.com/m9ssah/food-map/blob/f51a7c3ba5715c6a5f05c87e2afe0ca7435505b4/maple.png)
+![image alt](https://github.com/m9ssah/food-map/blob/f51a7c3ba5715c6a5f05c87e2afe0ca7435505b4/maple.png)
