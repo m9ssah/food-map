@@ -27,7 +27,7 @@ export default async function ProfilePage() {
   // fetch user profile
   const { data: profile } = await supabase
     .from('profiles')
-    .select('username, bio, created_at')
+    .select('username, bio, avatar_url, created_at')
     .eq('id', user.id)
     .single();
 
@@ -74,10 +74,11 @@ export default async function ProfilePage() {
         {/* Profile Header */}
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-6 mb-6">
           <ProfileHeader 
-            userId={user.id}
-            initialUsername={profile?.username || user.email?.split('@')[0] || 'User'}
-            initialBio={profile?.bio}
-          />
+          userId={user.id}
+          initialUsername={profile?.username || user.email?.split('@')[0] || 'User'}
+          initialBio={profile?.bio}
+          initialAvatarUrl={profile?.avatar_url}  // ← Add this
+        />
         </div>
 
         {/* Stats */}
