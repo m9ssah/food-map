@@ -17,10 +17,9 @@ export function Marker({ map, spot }: Props) {
 
     useEffect(() => {
         console.log('Creating marker for:', spot.name, 'at', spot.lat, spot.lng);
-        
         const el = document.createElement('div');
-        el.className = "w-6 h-6 rounded-full bg-red-500 cursor-pointer border-2 border-white";  // Made bigger and added border
-        el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';  // Add shadow
+        el.className = "w-6 h-6 rounded-full bg-red-500 cursor-pointer border-2 border-white";
+        el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
 
         el.addEventListener('click', () => {
             console.log('Marker clicked:', spot.name);

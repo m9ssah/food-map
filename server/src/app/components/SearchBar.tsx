@@ -14,8 +14,7 @@ type Restaurant = {
   google_rating: number | null
   google_ratings_count: number | null
   google_place_id?: string | null
-  google_photo_reference?: string;
-
+  photoUrl?: string | null
 }
 
 type Category = {
@@ -63,16 +62,22 @@ const heroCategories = [    // TODO: add more later
     description: 'Coffee & snacks'
   },
   { 
-    label: 'Food Trucks', 
-    icon: Van,
-    image: 'https://images.unsplash.com/photo-1565123409695-7b5ef63a2efb?w=800&q=80',
-    description: 'Street eats'
-  },
-  { 
     label: 'Dessert', 
     icon: IceCreamCone,
     image: 'https://blogto-production2-baselayer-display.blogto.com/listings/20230922-Kream-12.jpg?w=2048&cmd=resize_then_crop&height=1365&format=auto',
     description: 'Sweet treats'
+  },
+  { 
+    label: 'On Campus', 
+    icon: University,
+    image: 'https://harthouse.ca/assets/images/uploads/spaces/IMG_4601.jpg',
+    description: 'Convenient eats'
+  },
+  { 
+    label: 'Food Trucks', 
+    icon: Van,
+    image: 'https://preview.redd.it/does-anyone-know-what-has-happened-to-this-specific-food-v0-ighy41ym0rg81.jpg?width=640&crop=smart&auto=webp&s=25d4dc8d4431fc6cc5f4d2b7316e39c324472421',
+    description: 'Street eats'
   },
 ]
 const categoryIdCache: Record<string, string> = {}
@@ -94,10 +99,32 @@ export default function SearchBar() {
   const setActiveFilter = useMapStore((state) => state.setActiveFilter)
   const setFilteredSpots = useMapStore((state) => state.setFilteredSpots)
 
+  // fetch photos
+  const fetchPhotosForRestaurants = async (restaurants: Restaurant[]): Promise<Restaurant[]> => {
+    const restaurantsWithPhotos = await Promise.all(
+      restaurants.map(async (restaurant) => {
+        if (!restaurant.google_place_id) {
+          return { ...restaurant, photoUrl: null }
+        }
+        try {
+          const response = await fetch(`/api/google/places?place_id=${restaurant.google_place_id}`)
+          const data = await response.json()
+          return { 
+            ...restaurant, 
+            photoUrl: data.google_photo_reference 
+              ? `/api/google/photo?reference=${encodeURIComponent(data.google_photo_reference)}&maxwidth=800` 
+              : null 
+          }
+        } catch {
+          return { ...restaurant, photoUrl: null }
+        }
+      })
+    )
+    return restaurantsWithPhotos
+  }
+
   const getPhotoUrl = (restaurant: Restaurant) => {
-   return restaurant.google_photo_reference 
-        ? `/api/google/photo?reference=${encodeURIComponent(restaurant.google_photo_reference)}&maxwidth=800&maxheight=800`
-        : null;
+    return restaurant.photoUrl || null
   }
 
   // handle card category click
@@ -227,7 +254,10 @@ export default function SearchBar() {
       })) || []
 
       setFilteredSpots(spots)
-      setFilteredResults(restaurants || [])
+      
+      // fetch photos
+      const restaurantsWithPhotos = await fetchPhotosForRestaurants(restaurants || [])
+      setFilteredResults(restaurantsWithPhotos)
       setFilterLoading(false)
     }
 
