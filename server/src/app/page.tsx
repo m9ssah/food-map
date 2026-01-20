@@ -23,8 +23,7 @@ export default async function Home() {
     name: restaurant.name, 
     lat: restaurant.latitude, 
     lng: restaurant.longitude,
-    // category: restaurant.category
-  })) || []; 
+    })) || []; 
 
   return (
     <main className="h-screen w-screen overflow-hidden bg-gray-900">
