@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, X, Star, SlidersHorizontal, Coffee, Van, University, Pizza, Soup, DollarSign, CookingPot, Drumstick, Vegan, Laptop, Clock, Utensils, Beef, CakeSlice, IceCreamCone, ChevronLeft } from 'lucide-react'
+import { Search, X, Star, ChevronLeft, ChevronRight, GripVertical, SlidersHorizontal, Coffee, Van, University, Pizza, Soup, DollarSign, CookingPot, Drumstick, Vegan, Laptop, Clock, Utensils, Beef, CakeSlice, IceCreamCone } from 'lucide-react'
 import { useMapStore, Spot } from '@/stores/mapStore'
 
 type Restaurant = {
@@ -91,6 +91,10 @@ export default function SearchBar() {
   const [filterLoading, setFilterLoading] = useState(false)
   const [showCategoryView, setShowCategoryView] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [position, setPosition] = useState({ x: 24, y: 24 })
+  const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 })
   
   const supabase = useMemo(() => createClient(), [])
   
@@ -311,6 +315,34 @@ export default function SearchBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return
+
+      const deltaX = e.clientX - dragRef.current.startX
+      const deltaY = e.clientY - dragRef.current.startY
+
+      setPosition({
+        x: dragRef.current.initialX + deltaX,
+        y: dragRef.current.initialY + deltaY
+      })
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging])
+
   const handleSelectRestaurant = (restaurant: Restaurant) => {
     setSelectedSpot(restaurant.id)
     setQuery('')
@@ -328,11 +360,71 @@ export default function SearchBar() {
     return tag?.icon || Utensils
   }
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('.drag-handle')) {
+      setIsDragging(true)
+      dragRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        initialX: position.x,
+        initialY: position.y
+      }
+    }
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return
+      const deltaX = e.clientX - dragRef.current.startX
+      const deltaY = e.clientY - dragRef.current.startY
+      setPosition({
+        x: dragRef.current.initialX + deltaX,
+        y: dragRef.current.initialY + deltaY
+      })
+    }
+    const handleMouseUp = () => setIsDragging(false)
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging])
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed)
+    setIsOpen(false)
+    setShowCategoryView(false)
+  }
+
   return (
-    <div className="absolute top-6 left-6 bottom-4 z-10 flex flex-col" ref={searchRef}>
+    <div 
+    className={`absolute bottom-4 z-10 flex flex-col ${isDragging ? 'cursor-grabbing' : ''}`}
+    style={{
+      left: `${position.x}px`,
+      top: `${position.y}px`,
+      width: isCollapsed ? '56px' : 'auto',
+      maxWidth: isCollapsed ? '56px' : '64rem'
+    }}
+    ref={searchRef}
+    onMouseDown={handleMouseDown}
+  >
+    {isCollapsed ? (
+      <button
+        onClick={toggleCollapse}
+        className="w-14 h-14 backdrop-blur-xl bg-gray-900/5 border border-white/10 rounded-full shadow-2xl flex items-center justify-center hover:bg-gray-900/10 transition"
+      >
+        <Search className="w-6 h-6 text-white" />
+      </button>
+    ) : (
       <div className="w-full max-w-4xl flex flex-col min-h-0 max-h-full">
         <div className="backdrop-blur-xl bg-gray-900/5 border border-white/10 rounded-2xl shadow-2xl p-1">
           <div className="flex items-center px-4 py-5">
+            <div className="drag-handle cursor-grab active:cursor-grabbing mr-2">
+              <GripVertical className="w-5 h-5 text-gray-400" />
+            </div>
             <Search className="w-9 h-9 text-gray-400 mr-3 flex-shrink-0" />
             <input
               type="text"
@@ -352,6 +444,14 @@ export default function SearchBar() {
             <button className="ml-2 p-2 rounded-full hover:bg-white/10 transition">
               <SlidersHorizontal className="w-7 h-7 text-gray-300" />
             </button>
+
+            <button 
+            onClick={toggleCollapse}
+            className="ml-2 p-2 rounded-full hover:bg-white/10 transition"
+            title="Minimize"
+          >
+            <ChevronLeft className="w-6 h-6 text-gray-300" />
+          </button>
             {/* Profile Button */}
             <a href="/profile" className="ml-2 p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
               <div className="w-7 h-7 rounded-full bg-gray-500 flex items-center justify-center">
@@ -584,8 +684,9 @@ export default function SearchBar() {
               </div>
             )}
           </div>
-        )}
+       )}
       </div>
-    </div>
-  )
+    )}
+  </div>
+)
 }
