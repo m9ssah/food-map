@@ -367,8 +367,13 @@ export default function SearchBar() {
               <button
                 key={tag.label}
                 onClick={() => {
-                  setActiveFilter(activeFilter === tag.label ? null : tag.label)
-                  setShowCategoryView(false)
+                  if (activeFilter === tag.label) {
+                    setActiveFilter(null)
+                    setShowCategoryView(false)
+                  } else {
+                    setActiveFilter(tag.label)
+                    setShowCategoryView(true)
+                  }
                 }}
                 className={`flex items-center gap-1.5 px-4.5 py-3 bg-white/10 border border-white/10 rounded-full text-sm whitespace-nowrap transition${
                   activeFilter === tag.label
@@ -376,7 +381,7 @@ export default function SearchBar() {
                     : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
-                <tag.icon className="w-6 h-6" />    {/* TODO CHANGE BACK TO 4 */}
+                <tag.icon className="w-6 h-6" />
                 {tag.label}
               </button>
             ))}
@@ -543,48 +548,7 @@ export default function SearchBar() {
           </div>
         ) : null}
 
-        {/* Small category  buttons */}
-        {!showCategoryView && activeFilter && filteredResults.length > 0 && !isOpen && (
-          <div className="mt-2 backdrop-blur-xl bg-gray-900/5 border border-white/10 rounded-2xl shadow-2xl max-h-96 overflow-y-auto scrollbar-hide">
-            {filterLoading ? (
-              <div className="p-4 text-center text-gray-400">Loading...</div>
-            ) : (
-              <div className="py-2">
-                <div className="px-4 py-2 text-xs text-gray-400 border-b border-white/10">
-                  {filteredResults.length} {activeFilter} spot{filteredResults.length !== 1 ? 's' : ''}
-                </div>
-                {filteredResults.map((restaurant) => (
-                  <button
-                    key={restaurant.id}
-                    onClick={() => handleSelectRestaurant(restaurant)}
-                    className="w-full px-4 py-3 hover:bg-white/10 text-left transition"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="font-semibold text-white">
-                          {restaurant.name}
-                        </div>
-                        {restaurant.address && (
-                          <div className="text-sm text-gray-400 mt-1">
-                            {restaurant.address}
-                          </div>
-                        )}
-                      </div>
-                      {restaurant.google_rating && (
-                        <div className="flex items-center gap-1 ml-2">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium text-white">
-                            {restaurant.google_rating.toFixed(1)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+
       </div>
     </div>
   )
