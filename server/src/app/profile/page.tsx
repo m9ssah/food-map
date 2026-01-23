@@ -77,7 +77,7 @@ export default async function ProfilePage() {
           userId={user.id}
           initialUsername={profile?.username || user.email?.split('@')[0] || 'User'}
           initialBio={profile?.bio}
-          initialAvatarUrl={profile?.avatar_url}  // ← Add this
+          initialAvatarUrl={profile?.avatar_url}  
         />
         </div>
 
