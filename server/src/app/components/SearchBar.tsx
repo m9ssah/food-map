@@ -264,7 +264,76 @@ export default function SearchBar() {
     fetchFilteredRestaurants()
   }, [activeFilter, supabase, setFilteredSpots])
 
-  // search restaurants
+  // heuristic scoring for search res
+  const calcHeuristicScore = (restaurant: Restaurant, searchQuery: string): number => {
+    const normalizedQuery = searchQuery.toLowerCase().trim()
+    const normalizedName = restaurant.name.toLowerCase()
+    const normalizedAddress = (restaurant.address || '').toLowerCase()
+    
+    let score = 0
+    
+    // name matching 
+    if (normalizedName === normalizedQuery) score += 100
+    else if (normalizedName.startsWith(normalizedQuery)) score += 20
+    else if (normalizedName.includes(normalizedQuery)) score += 10
+    else {
+      const queryWords = normalizedQuery.split(/\s+/)
+      const nameWords = normalizedName.split(/\s+/)
+      
+      let wordMatchCount = 0
+      for (const qWord of queryWords) {
+        if (qWord.length < 2) continue
+        for (const nWord of nameWords) {
+          if (nWord.startsWith(qWord) || nWord.includes(qWord)) {
+            wordMatchCount++
+            break
+          }
+        }
+      }
+      
+      // proportion of query words matched
+      if (queryWords.length > 0) {
+        score += (wordMatchCount / queryWords.length) * 50
+      }
+      
+      // in case of short queries check chaar matches
+      if (normalizedQuery.length <= 2) {
+        const minLen = Math.min(normalizedName.length, normalizedQuery.length)
+        let matchingChars = 0
+        for (let i = 0; i < minLen; i++) {
+          if (normalizedName[i] === normalizedQuery[i]) matchingChars++
+        }
+        score += (matchingChars / normalizedQuery.length) * 5
+      }
+    }
+    
+    // address matching
+    if (normalizedAddress.includes(normalizedQuery)) {
+      score += 15
+    } else {
+      const queryWords = normalizedQuery.split(/\s+/)
+      for (const word of queryWords) {
+        if (word.length >= 3 && normalizedAddress.includes(word)) {
+          score += 3
+        }
+      }
+    }
+    
+    // popularity
+    if (restaurant.google_rating) {
+      score += restaurant.google_rating
+        if (restaurant.google_rating >= 4.5) score *= 2.5
+        else if (restaurant.google_rating >= 4.0) score *= 1.5
+    }
+    
+    if (restaurant.google_ratings_count) {
+      score += Math.log10(restaurant.google_ratings_count + 1)
+    }
+    
+    return score
+  }
+
+  // restaurant search
   useEffect(() => {
     const searchRestaurants = async () => {
       if (query.trim().length < 2) {
@@ -275,30 +344,50 @@ export default function SearchBar() {
 
       setLoading(true)
       
-     const { data, error } = await supabase
-      .from('restaurants')
-      .select('id, name, address, latitude, longitude, google_rating, google_ratings_count')
-      .ilike('name', `%${query}%`)
-      .limit(10)
+      const { data, error } = await supabase
+        .from('restaurants') 
+        .select('id, name, address, latitude, longitude, google_rating, google_ratings_count')
+        .or(`name.ilike.%${query}%,address.ilike.%${query}%`)
+        .limit(100)  // TODO adjust limit accordingly
 
-    if (error) {
-      console.error('Search error:', error)
-      console.error('Error code:', error.code)
-      console.error('Error message:', error.message)
-      console.error('Error details:', error.details)
-      console.error('Error hint:', error.hint)
-    } else {
-      console.log('Search success! Found:', data?.length, 'results')
-      setResults(data || [])
-      setIsOpen(true)
-    }
+      if (error) {
+        console.error('Search error:', error)
+        setResults([])
+        setIsOpen(false)
+        setLoading(false)
+        return
+      }
+
+      if (!data || data.length === 0) {
+        setResults([])
+        setIsOpen(true)
+        setLoading(false)
+        return
+      }
+
+      const scoredResults = data.map(restaurant => ({
+        restaurant,
+        score: calcHeuristicScore(restaurant, query)
+      }))
+
+      scoredResults.sort((a, b) => b.score - a.score)
       
+      const minScoreThreshold = 10
+      const rankedResults = scoredResults
+        .filter(item => item.score >= minScoreThreshold)
+        .slice(0, 10)
+        .map(item => item.restaurant)
+
+      setResults(rankedResults)
+      setIsOpen(true)
       setLoading(false)
     }
 
     const timeoutId = setTimeout(searchRestaurants, 300)
     return () => clearTimeout(timeoutId)
   }, [query, supabase])
+
+// end of search
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
