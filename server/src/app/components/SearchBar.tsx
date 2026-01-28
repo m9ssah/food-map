@@ -467,8 +467,13 @@ export default function SearchBar() {
               <button
                 key={tag.label}
                 onClick={() => {
-                  setActiveFilter(activeFilter === tag.label ? null : tag.label)
-                  setShowCategoryView(false)
+                  if (activeFilter === tag.label) {
+                    setActiveFilter(null)
+                    setShowCategoryView(false)
+                  } else {
+                    setActiveFilter(tag.label)
+                    setShowCategoryView(true)
+                  }
                 }}
                 className={`flex items-center gap-1.5 px-4.5 py-3 bg-white/10 border border-white/10 rounded-full text-sm whitespace-nowrap transition${
                   activeFilter === tag.label
@@ -476,7 +481,7 @@ export default function SearchBar() {
                     : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
-                <tag.icon className="w-6 h-6" />    {/* TODO CHANGE BACK TO 4 */}
+                <tag.icon className="w-6 h-6" />
                 {tag.label}
               </button>
             ))}
