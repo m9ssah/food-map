@@ -12,7 +12,19 @@ export default async function Home() {
 
   const { data: restaurants, error } = await supabase
     .from('restaurants')
-    .select('id, name, latitude, longitude');
+    .select(`
+      id, 
+      name, 
+      latitude, 
+      longitude,
+      google_price_level,
+      restaurant_categories(
+        categories(
+          slug,
+          name
+        )
+      )
+    `);
 
   if (error) {
     console.error('Error fetching restaurants:', error); 
@@ -23,7 +35,11 @@ export default async function Home() {
     name: restaurant.name, 
     lat: restaurant.latitude, 
     lng: restaurant.longitude,
-    // category: restaurant.category
+    categories: restaurant.restaurant_categories?.map(
+      (rc: any) => rc.categories?.slug
+    ).filter(Boolean) || [],
+    category: restaurant.restaurant_categories?.[0]?.categories?.slug,
+    priceLevel: restaurant.google_price_level
   })) || []; 
 
   return (
