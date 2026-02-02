@@ -32,19 +32,19 @@ type RestaurantData = {
 
 const filterTags = [
   { icon: Utensils, label: 'Restaurants' },
+  { icon: Clock, label: 'Open Now' },     // special case
   { icon: Coffee, label: 'Cafes' },
-  { icon: Laptop, label: 'Laptop Friendly' },   
-  { icon: Van, label: 'Food Trucks' },
   { icon: University, label: 'On Campus' },
+  { icon: Van, label: 'Food Trucks' },
+  { icon: Laptop, label: 'Laptop Friendly' },   
   { icon: Pizza, label: 'Italian'},
-  { icon: IceCreamCone, label: 'Dessert' },
   { icon: Soup, label: 'East Asian' },
   { icon: Drumstick, label: 'Middle Eastern' },
   { icon: CookingPot, label: 'Indian' },
   { icon: DollarSign, label: 'Cheap Eats' },
-  { icon: Clock, label: 'Open Now' },     // special case
-  { icon: Vegan, label: 'Vegetarian' },
+  { icon: IceCreamCone, label: 'Dessert' },
   { icon: Beef, label: 'Halal' },
+  { icon: Vegan, label: 'Vegetarian' },
   { icon: CakeSlice, label: 'Bakery' },
 ]
 
@@ -78,6 +78,30 @@ const heroCategories = [    // TODO: add more later
     icon: Van,
     image: 'https://preview.redd.it/does-anyone-know-what-has-happened-to-this-specific-food-v0-ighy41ym0rg81.jpg?width=640&crop=smart&auto=webp&s=25d4dc8d4431fc6cc5f4d2b7316e39c324472421',
     description: 'Street eats'
+  },
+  { 
+    label: 'Laptop Friendly', 
+    icon: Laptop,
+    image: 'https://goodearthcoffeehouse.com/wp-content/uploads/2025/06/Good-Earth-Robson_Cafe-Image-28-scaled.jpg',
+    description: 'Spots to work from'
+  },
+  { 
+    label: 'Italian', 
+    icon: Pizza,
+    image: 'https://torontolife.mblycdn.com/tl/resized/2018/12/w1280/toronto-restaurants-cantina-mercatto-italian-st-lawrence-room.jpg',
+    description: 'Pizzas & pastas'
+  },
+  { 
+    label: 'East Asian', 
+    icon: Soup,
+    image: 'https://media.blogto.com/uploads/2019/12/08/1575852380-20191207-RoninIzakaya2.jpg?w=1400&cmd=resize&height=2500&quality=70',
+    description: 'Sushi, ramen & more'
+  },
+  { 
+    label: 'Middle Eastern', 
+    icon: Drumstick,
+    image: 'https://d2l4kn3pfhqw69.cloudfront.net/wp-content/uploads/2025/07/79300477-1-copy.jpg',
+    description: 'Oriental flavors'
   },
 ]
 const categoryIdCache: Record<string, string> = {}
