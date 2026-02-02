@@ -24,13 +24,13 @@ export default async function Home() {
           name
         )
       )
-    `);
+    `) as any;
 
   if (error) {
     console.error('Error fetching restaurants:', error); 
   }
 
-  const spots = restaurants?.map(restaurant => ({
+  const spots = restaurants?.map((restaurant: any) => ({
     id: restaurant.id, 
     name: restaurant.name, 
     lat: restaurant.latitude, 
