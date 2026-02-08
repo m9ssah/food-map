@@ -30,6 +30,23 @@ export function useMap(containerRef: React.RefObject<HTMLDivElement | null>) {
         setIsMapReady(true); 
       });
 
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const { latitude, longitude } = pos.coords;
+            mapRef.current?.flyTo({
+              center: [longitude, latitude],
+              zoom: DEFAULT_ZOOM * 1.2,
+              speed: 1.2,
+            });
+            },
+            (err) => {
+              console.warn('Geolocation denied or failed, using default location', err);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+      }
+
       mapRef.current.on('error', (e) => {
         console.error('Map error:', e);
       });
