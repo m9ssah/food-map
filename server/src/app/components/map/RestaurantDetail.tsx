@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { X, Star, MapPin, LogIn, Clock, MessageSquare } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { Inter } from 'next/font/google';
+import FavoriteButton from '../FavoriteButton';
 
 type GoogleOpeningHours = {
     open_now?: boolean;
@@ -313,8 +314,13 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
             {/* Header */}
             <div className={`${photoUrl} p-4 flex items-start justify-between z-10`}>
                 <div>
-                    <h2 className="text-4xl font-bold text-white mb-1">
+                    <h2 className="text-4xl font-bold text-white mb-1 pr-10 flex items-center gap-4">
                         {restaurant.name}
+
+                        <FavoriteButton 
+                        restaurantId={restaurantId} 
+                        userId={user?.id || null} 
+                    />
                     </h2>
                     {/* TODO re add price range later */}
                 </div>
