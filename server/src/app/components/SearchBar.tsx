@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, X, Star, ChevronLeft, ChevronRight, GripVertical, SlidersHorizontal, Coffee, Van, University, Pizza, Soup, DollarSign, CookingPot, Drumstick, Vegan, Laptop, Clock, Utensils, Beef, CakeSlice, IceCreamCone } from 'lucide-react'
+import { Search, X, Star, ChevronLeft, GripVertical, SlidersHorizontal, Coffee, Van, University, Pizza, Soup, DollarSign, 
+         CookingPot, Drumstick, Vegan, Laptop, Clock, Utensils, Beef, CakeSlice, IceCreamCone, Dices, GraduationCap,MapPin
+        } from 'lucide-react'
 import { useMapStore, Spot } from '@/stores/mapStore'
 
 type Restaurant = {
@@ -32,6 +34,7 @@ type RestaurantData = {
 
 const filterTags = [
   { icon: Utensils, label: 'Restaurants' },
+  { icon: GraduationCap, label: 'Student Discount' },
   { icon: Clock, label: 'Open Now' },     // special case
   { icon: Coffee, label: 'Cafes' },
   { icon: University, label: 'On Campus' },
@@ -126,6 +129,14 @@ export default function SearchBar() {
   const activeFilter = useMapStore((state) => state.activeFilter)
   const setActiveFilter = useMapStore((state) => state.setActiveFilter)
   const setFilteredSpots = useMapStore((state) => state.setFilteredSpots)
+  const flyTo = useMapStore((state) => state.flyTo)
+
+  // random state
+  const [isRolling, setIsRolling] = useState(false)
+  const [rollingName, setRollingName] = useState<string | null>(null)
+  const [revealedRestaurant, setRevealedRestaurant] = useState<Restaurant | null>(null)
+  const [showReveal, setShowReveal] = useState(false)
+  const [revealPhase, setRevealPhase] = useState<'rolling' | 'landed' | 'none'>('none')
 
   // fetch photos
   const fetchPhotosForRestaurants = async (restaurants: Restaurant[]): Promise<Restaurant[]> => {
@@ -512,6 +523,70 @@ export default function SearchBar() {
     setShowCategoryView(false)
   }
 
+  // randomizer
+  const handleRandomSpot = useCallback(async () => {
+    if (isRolling) return 
+
+    setIsRolling(true)
+    setRevealPhase('rolling')
+    setShowReveal(true)
+    setIsOpen(false)
+    setShowCategoryView(false)
+
+    const { data: allRestaurants, error } = await supabase
+      .from('restaurants')
+      .select('id, name, address, latitude, longitude, google_rating, google_ratings_count, google_place_id')
+
+    if (error || !allRestaurants || allRestaurants.length === 0) {
+      console.error('Random spot error:', error)
+      setIsRolling(false)
+      setShowReveal(false)
+      setRevealPhase('none')
+      return
+    }
+
+    const winner = allRestaurants[Math.floor(Math.random() * allRestaurants.length)]
+
+    const totalCycles = 20
+    let cycle = 0
+
+    const runCycle = () => {
+      if (cycle >= totalCycles) {
+        // reveal
+        setRollingName(winner.name)
+        setRevealedRestaurant(winner)
+        setRevealPhase('landed')
+        setIsRolling(false)
+
+        // fly to winner & select
+        setTimeout(() => {
+          if (flyTo) {
+            flyTo(winner.longitude, winner.latitude, 17)
+          }
+          setSelectedSpot(winner.id)
+        }, 800)
+        return
+      }
+
+      // random names displayed
+      const randomIndex = Math.floor(Math.random() * allRestaurants.length)
+      setRollingName(allRestaurants[randomIndex].name)
+      cycle++
+
+      const delay = 50 + (cycle / totalCycles) * 200
+      setTimeout(runCycle, delay)
+    }
+
+    runCycle()
+  }, [isRolling, supabase, flyTo, setSelectedSpot])
+
+  const dismissReveal = () => {
+    setShowReveal(false)
+    setRevealPhase('none')
+    setRollingName(null)
+    setRevealedRestaurant(null)
+  }
+
   return (
     <div 
     className={`absolute bottom-4 z-10 flex flex-col ${isDragging ? 'cursor-grabbing' : ''}`}
@@ -556,6 +631,22 @@ export default function SearchBar() {
             )}
             <button className="ml-2 p-2 rounded-full hover:bg-white/10 transition">
               <SlidersHorizontal className="w-7 h-7 text-gray-300" />
+            </button>
+
+            {/* randomizer button */}
+            <button
+              onClick={handleRandomSpot}
+              disabled={isRolling}
+              className={`ml-2 p-2 rounded-full transition ${
+                isRolling
+                  ? 'bg-amber-500/30 animate-pulse cursor-wait'
+                  : 'hover:bg-white/10'
+              }`}
+              title="Randomizer"
+            >
+              <Dices className={`w-7 h-7 ${
+                isRolling ? 'text-amber-400 animate-spin' : 'text-gray-300'
+              }`} />
             </button>
 
             <button 
@@ -803,6 +894,95 @@ export default function SearchBar() {
             )}
           </div>
        )}
+      </div>
+    )}
+
+    {/* randomizer */}
+    {showReveal && (
+      <div 
+        className="fixed z-50 flex items-center justify-center"
+        style={{ left: `-${position.x}px`, top: `-${position.y}px`, width: '102vw', height: '102vh' }}
+      >
+        {/* blurred bg */}
+        <div 
+          className={`absolute inset-0 transition-all duration-700 ${
+            revealPhase === 'landed' ? 'bg-black/60 backdrop-blur-md' : 'bg-black/40 backdrop-blur-sm'
+          }`}
+          onClick={revealPhase === 'landed' ? dismissReveal : undefined}
+        />
+
+        {/* Content Card */}
+        <div className={`relative z-10 flex flex-col items-center transition-all duration-500 ${
+          revealPhase === 'landed' ? 'scale-100 opacity-100' : 'scale-95 opacity-90'
+        }`}>
+          <div className={`mb-6 ${revealPhase === 'rolling' ? 'animate-bounce' : ''}`}>
+            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${
+              revealPhase === 'landed' 
+                ? 'bg-amber-500 shadow-lg shadow-amber-500/50' 
+                : 'bg-white/20 backdrop-blur-xl'
+            }`}>
+              <Dices className={`w-10 h-10 ${
+                revealPhase === 'rolling' ? 'text-white animate-spin' : 'text-white'
+              }`} />
+            </div>
+          </div>
+
+          <div className="text-center max-w-md px-6">
+            <p className={`text-sm font-medium uppercase tracking-widest mb-3 ${
+              revealPhase === 'landed' ? 'text-amber-400' : 'text-gray-400'
+            }`}>
+              {revealPhase === 'rolling' ? 'Picking a spot...' : 'You should try'}
+            </p>
+            <h2 className={`text-3xl md:text-4xl font-bold text-white transition-all duration-300 ${
+              revealPhase === 'rolling' ? 'blur[0.5px]' : ''
+            }`}>
+              {rollingName || '...'}
+            </h2>
+
+            {revealPhase === 'landed' && revealedRestaurant && (
+              <div className="mt-4 space-y-3 animate-fade-in">
+                {revealedRestaurant.address && (
+                  <div className="flex items-center justify-center gap-2 text-gray-300">
+                    <MapPin className="w-4 h-4" />
+                    <span className="text-sm">{revealedRestaurant.address}</span>
+                  </div>
+                )}
+                {revealedRestaurant.google_rating && (
+                  <div className="flex items-center justify-center gap-2">
+                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                    <span className="text-lg font-semibold text-white">
+                      {revealedRestaurant.google_rating.toFixed(1)}
+                    </span>
+                    {revealedRestaurant.google_ratings_count && (
+                      <span className="text-sm text-gray-400">
+                        ({revealedRestaurant.google_ratings_count.toLocaleString()} reviews)
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-center gap-3 mt-6">
+                  <button
+                    onClick={dismissReveal}
+                    className="px-6 py-3 rounded-xl bg-white text-gray-900 font-semibold hover:bg-gray-100 transition flex items-center gap-2"
+                  >
+                    Let&apos;s go!
+                  </button>
+                  <button
+                    onClick={() => {
+                      dismissReveal()
+                      handleRandomSpot()
+                    }}
+                    className="px-6 py-3 rounded-xl bg-white/10 text-white font-semibold hover:bg-white/20 transition border border-white/20 flex items-center gap-2"
+                  >
+                    <Dices className="w-5 h-5" />
+                    Re-roll
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     )}
   </div>

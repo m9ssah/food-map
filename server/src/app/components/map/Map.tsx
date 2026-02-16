@@ -16,8 +16,19 @@ export default function Map({ spots }: Props) {
   const { mapRef, isMapReady } = useMap(containerRef);
 
   const { selectedSpotId, setSelectedSpot, activeFilter, filteredSpots } = useMapStore();
+  const setFlyTo = useMapStore((state) => state.setFlyTo);
 
   const displaySpots = activeFilter && filteredSpots.length > 0 ? filteredSpots : (activeFilter ? [] : spots);
+
+  useEffect(() => {
+    if (isMapReady && mapRef.current) {
+      const map = mapRef.current;
+      setFlyTo((lng: number, lat: number, zoom?: number) => {
+        map.flyTo({ center: [lng, lat], zoom: zoom ?? 18, speed: 1.2 });
+      });
+    }
+    return () => setFlyTo(null); // cleanup on unmount
+  }, [isMapReady, mapRef, setFlyTo]);
 
   useEffect(() => {
     console.log('Map ready state changed:', isMapReady);

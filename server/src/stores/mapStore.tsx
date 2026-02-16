@@ -8,6 +8,8 @@ export type Spot = {
     categories?: string[];
 };
 
+type FlyToTarget = (lng: number, lat: number, zoom?: number) => void;
+
 type MapState = {
     selectedSpotId: string | null;
     setSelectedSpot: (id: string | null) => void;
@@ -15,6 +17,8 @@ type MapState = {
     setActiveFilter: (filter: string | null) => void;
     filteredSpots: Spot[];
     setFilteredSpots: (spots: Spot[]) => void;
+    flyTo: FlyToTarget | null;
+    setFlyTo: (target: FlyToTarget | null) => void;
 };
 
 export const useMapStore = create<MapState>((set) => ({
@@ -24,4 +28,6 @@ export const useMapStore = create<MapState>((set) => ({
     setActiveFilter: (filter) => set({ activeFilter: filter }),
     filteredSpots: [],
     setFilteredSpots: (spots) => set({ filteredSpots: spots }),
+    flyTo: null,
+    setFlyTo: (target) => set({ flyTo: target }),
 }));

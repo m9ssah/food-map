@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { X, Star, MapPin, LogIn, Clock, MessageSquare } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
-import { Inter } from 'next/font/google';
 import FavoriteButton from '../FavoriteButton';
 
 type GoogleOpeningHours = {
