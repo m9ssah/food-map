@@ -4,6 +4,7 @@ import { ArrowLeft, Heart, Star, Users, Plus } from 'lucide-react';
 import Link from 'next/link';
 import LogoutButton from '../components/LogoutButton';
 import ProfileHeader from '../components/ProfileHeader';
+import DeleteBlendButton from '../components/DeleteBlendButton';
 
 type UserRating = {
   id: string;
@@ -183,13 +184,15 @@ export default async function ProfilePage() {
           ) : (
             <div className="space-y-3">
               {blends.map((blend) => (
-                <Link
+                <div
                   key={blend.id}
-                  href={`/blends/${blend.id}`}
-                  className="block backdrop-blur-xl bg-white/10 border border-white/10 rounded-2xl p-4 shadow-xl hover:bg-white/15 transition"
+                  className="backdrop-blur-xl bg-white/10 border border-white/10 rounded-2xl p-4 shadow-xl hover:bg-white/15 transition"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <Link 
+                      href={`/blends/${blend.id}`}
+                      className="flex items-center gap-3 flex-1"
+                    >
                       <div className="p-2 bg-blue-600/20 rounded-lg">
                         <Users className="w-5 h-5 text-blue-400" />
                       </div>
@@ -199,14 +202,23 @@ export default async function ProfilePage() {
                           {blend.member_count} member{blend.member_count !== 1 ? 's' : ''} • Code: {blend.invite_code}
                         </p>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-gray-400 text-sm">
-                        Created {getTimeAgo(blend.created_at)}
-                      </p>
+                    </Link>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-gray-400 text-sm">
+                          Created {getTimeAgo(blend.created_at)}
+                        </p>
+                      </div>
+
+                      {/* Delete Button */}
+                      <DeleteBlendButton 
+                        blendId={blend.id} 
+                        blendName={blend.name}
+                      />
+                      
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}

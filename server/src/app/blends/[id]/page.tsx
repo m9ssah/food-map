@@ -12,12 +12,12 @@ export default async function BlendPage({
   const supabase = await createClient();
   const { id } = await params;
 
-  // Check if user is authenticated
+  // check if user is authenticated
   const { data: { user } } = await supabase.auth.getUser();
   console.log('Current user:', user?.id);
   console.log('Looking for blend:', id);
 
-  // Get blend details and members
+  // get blend details and members
   const { data: blend, error } = await supabase
     .from('blends')
     .select(`
