@@ -28,7 +28,7 @@ function getCategoryIcon(category?: string): string {
         brunch: '🥞',
         dessert: '🍰',
         foodtrucks: '🚚',
-        halal: '🕌',
+        halal: '🌙',
         middleeastern: '🌯',
         vegetarianoptions: '🥗',
         indian: '🍛',
