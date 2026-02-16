@@ -15,20 +15,12 @@ type UserRating = {
   restaurant_name: string | null;
 };
 
-type Friend = {
-  id: string;
-  friend_id: string;
-  friend_username: string;
-  friend_email: string;
-  created_at: string;
-};
-
 type Blend = {
   id: string;
   name: string;
   created_at: string;
   member_count: number;
-  common_count: number;
+  invite_code: string;
 };
 
 type Favorite = {
@@ -97,30 +89,6 @@ export default async function ProfilePage() {
     created_at: f.created_at,
   }));
 
-  // fetch user's friends
-  const { data: userFriends } = await supabase
-    .from('friends')
-    .select(`
-      id,
-      friend_id,
-      created_at,
-      friend:profiles!friends_friend_id_fkey (
-        id,
-        username,
-        email
-      )
-    `)
-    .eq('user_id', user.id)
-    .eq('status', 'accepted');
-
-  const friends: Friend[] = (userFriends || []).map((f: any) => ({
-    id: f.id,
-    friend_id: f.friend_id,
-    friend_username: f.friend?.username || f.friend?.email?.split('@')[0] || 'User',
-    friend_email: f.friend?.email || '',
-    created_at: f.created_at,
-  }));
-
   // fetch user's blends
   const { data: userBlends } = await supabase
     .from('blend_members')
@@ -129,6 +97,7 @@ export default async function ProfilePage() {
         id,
         name,
         created_at,
+        invite_code,
         blend_members ( count )
       )
     `)
@@ -138,10 +107,10 @@ export default async function ProfilePage() {
     id: b.blends.id,
     name: b.blends.name,
     created_at: b.blends.created_at,
+    invite_code: b.blends.invite_code,
     member_count: b.blends.blend_members?.length || 0,
-    common_count: 0, // We'll calculate this on the blend page
   }));
-
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Header */}
@@ -180,76 +149,9 @@ export default async function ProfilePage() {
             <span className="text-gray-300 ml-2">Favorites</span>
           </div>
           <div className="backdrop-blur-xl bg-white/10 border border-white/10 rounded-full px-6 py-3 shadow-lg">
-            <span className="font-bold text-white text-lg">{friends.length}</span>
-            <span className="text-gray-300 ml-2">Friends</span>
-          </div>
-          <div className="backdrop-blur-xl bg-white/10 border border-white/10 rounded-full px-6 py-3 shadow-lg">
             <span className="font-bold text-white text-lg">{blends.length}</span>
             <span className="text-gray-300 ml-2">Blends</span>
           </div>
-        </div>
-
-        {/* Friends Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-white">Friends</h2>
-            <Link
-              href="/friends"
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition shadow-lg"
-            >
-              <UserPlus className="w-4 h-4" />
-              Find Friends
-            </Link>
-          </div>
-          
-          {friends.length === 0 ? (
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center shadow-xl">
-              <UserPlus className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-300 mb-4">No friends yet</p>
-              <p className="text-gray-400 text-sm mb-4">
-                Add friends to create blends and share your favorite spots!
-              </p>
-              <Link
-                href="/friends"
-                className="inline-flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-500 transition"
-              >
-                <UserPlus className="w-4 h-4" />
-                Find Friends
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {friends.slice(0, 6).map((friend) => (
-                <div
-                  key={friend.id}
-                  className="backdrop-blur-xl bg-white/10 border border-white/10 rounded-xl p-4 text-center hover:bg-white/15 transition"
-                >
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-2 flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">
-                      {friend.friend_username[0].toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="text-white font-semibold truncate">
-                    {friend.friend_username}
-                  </p>
-                  <p className="text-gray-400 text-xs truncate">
-                    {friend.friend_email}
-                  </p>
-                </div>
-              ))}
-              {friends.length > 6 && (
-                <Link
-                  href="/friends"
-                  className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center hover:bg-white/10 transition"
-                >
-                  <Users className="w-8 h-8 text-gray-400 mb-2" />
-                  <p className="text-gray-400 text-sm">
-                    +{friends.length - 6} more
-                  </p>
-                </Link>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Blends Section */}
