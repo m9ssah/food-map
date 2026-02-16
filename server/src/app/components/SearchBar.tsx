@@ -661,6 +661,7 @@ export default function SearchBar() {
           >
             <ChevronLeft className="w-6 h-6 text-gray-300" />
           </button>
+          
             {/* Profile Button */}
             <a href="/profile" className="ml-2 p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
               <div className="w-7 h-7 rounded-full bg-gray-500 flex items-center justify-center">

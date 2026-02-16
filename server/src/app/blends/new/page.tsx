@@ -3,143 +3,117 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function NewBlendPage() {
   const [blendName, setBlendName] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
-  async function searchUsers() {
-    if (!searchQuery) return;
-    
-    // search users by username
-    const { data } = await supabase
-      .from('profiles') 
-      .select('id, username')
-      .ilike('username', `%${searchQuery}%`)
-      .limit(5);
-    
-    setSearchResults(data || []);
-  }
-
   async function createBlend() {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user || !blendName.trim()) return;
 
-    // create blend
-    const { data: blend, error } = await supabase
-      .from('blends')
-      .insert({ name: blendName, created_by: user.id })
-      .select()
-      .single();
+    setLoading(true);
+    setError(null);
 
-    if (error || !blend) return;
+    try {
+      // generate simple invite code (no RPC needed)
+      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // add creator as member
-    await supabase
-      .from('blend_members')
-      .insert({ blend_id: blend.id, user_id: user.id });
+      console.log('Creating blend with:', { name: blendName, created_by: user.id, invite_code: inviteCode });
 
-    // add selected users as members
-    if (selectedUsers.length > 0) {
-      await supabase
+      // create blend
+      const { data: blend, error: blendError } = await supabase
+        .from('blends')
+        .insert({ 
+          name: blendName, 
+          created_by: user.id,
+          invite_code: inviteCode,
+          is_public: true  
+        })
+        .select()
+        .single();
+
+      if (blendError) {
+        console.error('Blend creation error:', blendError);
+        setError(`Failed to create blend: ${blendError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Blend created:', blend);
+
+      // add creator as member
+      const { error: memberError } = await supabase
         .from('blend_members')
-        .insert(
-          selectedUsers.map(userId => ({
-            blend_id: blend.id,
-            user_id: userId
-          }))
-        );
-    }
+        .insert({ blend_id: blend.id, user_id: user.id });
 
-    router.push(`/blends/${blend.id}`);
+      if (memberError) {
+        console.error('Member addition error:', memberError);
+        setError(`Failed to add member: ${memberError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Member added, redirecting...');
+      router.push(`/blends/${blend.id}`);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred');
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen p-8">
-      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-6 mb-6 max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-6">Create a Blend</h1>
-        
-        {/* Blend Name */}
-        <div className="mb-6">
-          <label className="text-white block mb-2">Blend Name</label>
-          <input
-            type="text"
-            value={blendName}
-            onChange={(e) => setBlendName(e.target.value)}
-            placeholder="Alex & John's Dinner Spots"
-            className="w-full bg-gray-700 text-white rounded-lg p-3 border border-gray-600"
-          />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="backdrop-blur-xl bg-gray-900/30 border-b border-white/10">
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          <Link
+            href="/profile"
+            className="flex items-center gap-2 text-gray-300 hover:text-white transition"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back
+          </Link>
         </div>
+      </div>
 
-        {/* Search Users */}
-        <div className="mb-6">
-          <label className="text-white block mb-2">Add Friends</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name..."
-              className="flex-1 bg-gray-700 text-white rounded-lg p-3 border border-gray-600"
-            />
-            <button
-              onClick={searchUsers}
-              className="bg-blue-600 text-white px-6 rounded-lg hover:bg-blue-500"
-            >
-              Search
-            </button>
-          </div>
-
-          {/* Search Results */}
-          {searchResults.length > 0 && (
-            <div className="mt-4 space-y-2">
-              {searchResults.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between bg-gray-700 p-3 rounded-lg"
-                >
-                  <span className="text-white">{user.email}</span>
-                  <button
-                    onClick={() => {
-                      if (selectedUsers.includes(user.id)) {
-                        setSelectedUsers(selectedUsers.filter(id => id !== user.id));
-                      } else {
-                        setSelectedUsers([...selectedUsers, user.id]);
-                      }
-                    }}
-                    className={`px-4 py-2 rounded-lg ${
-                      selectedUsers.includes(user.id)
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-600 text-white'
-                    }`}
-                  >
-                    {selectedUsers.includes(user.id) ? 'Added' : 'Add'}
-                  </button>
-                </div>
-              ))}
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Create a Blend</h1>
+          <p className="text-gray-400 mb-6">
+            Share the invite code with friends to find restaurants you all want to try!
+          </p>
+          
+          {error && (
+            <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-200">
+              {error}
             </div>
           )}
-        </div>
 
-        {/* Selected Users */}
-        {selectedUsers.length > 0 && (
           <div className="mb-6">
-            <p className="text-gray-400 mb-2">{selectedUsers.length} friend(s) selected</p>
+            <label className="text-white block mb-2">Blend Name</label>
+            <input
+              type="text"
+              value={blendName}
+              onChange={(e) => setBlendName(e.target.value)}
+              placeholder="e.g., Weekend Brunch Spots"
+              className="w-full bg-gray-700 text-white rounded-lg p-3 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-        )}
 
-        {/* Create Button */}
-        <button
-          onClick={createBlend}
-          disabled={!blendName || selectedUsers.length === 0}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed"
-        >
-          Create Blend
-        </button>
+          <button
+            onClick={createBlend}
+            disabled={!blendName.trim() || loading}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition"
+          >
+            {loading ? 'Creating...' : 'Create Blend'}
+          </button>
+        </div>
       </div>
     </div>
   );
