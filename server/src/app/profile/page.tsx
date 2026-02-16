@@ -159,7 +159,7 @@ export default async function ProfilePage() {
             <h2 className="text-2xl font-bold text-white">My Blends</h2>
             <Link
               href="/blends/new"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white font-bold rounded-lg hover:bg-yellow-600 transition shadow-lg"
             >
               <Plus className="w-4 h-4" />
               Create Blend
@@ -215,7 +215,7 @@ export default async function ProfilePage() {
                         blendId={blend.id} 
                         blendName={blend.name}
                       />
-                      
+
                     </div>
                   </div>
                 </div>

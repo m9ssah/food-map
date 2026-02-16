@@ -30,7 +30,7 @@ export default function ShareBlendButton({ inviteCode }: { inviteCode: string })
     <div className="flex gap-2">
       <button
         onClick={shareNative}
-        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition"
+        className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white font-bold rounded-lg hover:bg-yellow-600 transition shadow-lg"
       >
         <Share2 className="w-4 h-4" />
         Share
