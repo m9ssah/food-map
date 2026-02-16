@@ -471,6 +471,11 @@ export default function SearchBar() {
     setSelectedSpot(restaurant.id)
     setQuery('')
     setIsOpen(false)
+    setTimeout(() => {
+      if (flyTo) {
+        flyTo(restaurant.longitude, restaurant.latitude, 17)
+      }
+    }, 100)
   }
 
   const handleClear = () => {
@@ -986,5 +991,5 @@ export default function SearchBar() {
       </div>
     )}
   </div>
-)
+  )
 }
