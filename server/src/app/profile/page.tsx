@@ -1,9 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { ArrowLeft, Heart, Star, Users, Plus, UserPlus } from 'lucide-react';
+import { ArrowLeft, Heart, Star, Users, Plus } from 'lucide-react';
 import Link from 'next/link';
 import LogoutButton from '../components/LogoutButton';
-import Image from 'next/image';
 import ProfileHeader from '../components/ProfileHeader';
 
 type UserRating = {
@@ -29,7 +28,6 @@ type Favorite = {
   restaurant_name: string;
   created_at: string;
 };
-
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -110,7 +108,7 @@ export default async function ProfilePage() {
     invite_code: b.blends.invite_code,
     member_count: b.blends.blend_members?.length || 0,
   }));
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Header */}
@@ -172,7 +170,7 @@ export default async function ProfilePage() {
               <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-300 mb-4">No blends yet</p>
               <p className="text-gray-400 text-sm mb-4">
-                Create a blend with friends to find restaurants you all want to try!
+                Create a blend to find restaurants you and your friends both want to try!
               </p>
               <Link
                 href="/blends/new"
@@ -198,7 +196,7 @@ export default async function ProfilePage() {
                       <div>
                         <h3 className="text-white font-semibold">{blend.name}</h3>
                         <p className="text-gray-400 text-sm">
-                          {blend.member_count} member{blend.member_count !== 1 ? 's' : ''}
+                          {blend.member_count} member{blend.member_count !== 1 ? 's' : ''} • Code: {blend.invite_code}
                         </p>
                       </div>
                     </div>
@@ -295,17 +293,14 @@ export default async function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Placeholder for image */}
                   <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg h-32 mb-3 flex items-center justify-center">
                     <span className="text-gray-400 text-sm">Photo coming soon</span>
                   </div>
 
-                  {/* Review */}
                   {rating.review && (
                     <p className="text-gray-200 mb-3">{rating.review}</p>
                   )}
 
-                  {/* Footer */}
                   <div className="flex items-center justify-between text-gray-400 text-sm border-t border-white/10 pt-3">
                     <span>{getTimeAgo(rating.created_at)}</span>
                     <div className="flex items-center gap-1">
@@ -367,7 +362,6 @@ export default async function ProfilePage() {
   );
 }
 
-// helper function to get time ago string
 function getTimeAgo(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
