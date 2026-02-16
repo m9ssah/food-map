@@ -255,65 +255,6 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Recent Activity</h2>
-          
-          {ratings.length === 0 ? (
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 text-center shadow-xl">
-              <p className="text-gray-300 mb-4">No reviews yet</p>
-              <Link
-                href="/"
-                className="inline-block px-6 py-2 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/30 transition border border-white/20"
-              >
-                Explore Restaurants
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {ratings.slice(0, 4).map((rating) => (
-                <div key={rating.id} className="backdrop-blur-xl bg-white/10 border border-white/10 rounded-2xl p-4 shadow-xl hover:bg-white/15 transition">
-                  <div>
-                    <div className="flex items-center gap-2 mb-3 flex-wrap">
-                      <span className="text-white font-semibold">
-                        {profile?.username || 'You'}
-                      </span>
-                      <span className="text-gray-400">reviewed</span>
-                      <span className="text-white font-semibold">
-                        {rating.restaurant_name || 'Unknown'}
-                      </span>
-                      <div className="flex">
-                        {[...Array(rating.score)].map((_, i) => (
-                          <Star 
-                            key={i}
-                            className="w-4 h-4 text-yellow-400 fill-current"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-lg h-32 mb-3 flex items-center justify-center">
-                    <span className="text-gray-400 text-sm">Photo coming soon</span>
-                  </div>
-
-                  {rating.review && (
-                    <p className="text-gray-200 mb-3">{rating.review}</p>
-                  )}
-
-                  <div className="flex items-center justify-between text-gray-400 text-sm border-t border-white/10 pt-3">
-                    <span>{getTimeAgo(rating.created_at)}</span>
-                    <div className="flex items-center gap-1">
-                      <Heart className="w-4 h-4" />
-                      <span>0 likes</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Campus Favorites */}
         <div>
           <h2 className="text-2xl font-bold text-white mb-4">Campus Favorites</h2>
