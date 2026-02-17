@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useMap } from './useMap';
 import { Marker } from './Marker'; 
-import RestaurantDetail from './RestaurantDetail';
+import SpotDetail from '../SpotDetail';
 import { useMapStore, Spot } from '@/stores/mapStore';
 
 type Props = {
@@ -50,7 +50,7 @@ export default function Map({ spots }: Props) {
       ))}
 
       {selectedSpotId && (
-        <RestaurantDetail
+        <SpotDetail
           restaurantId={selectedSpotId}
           onClose={() => setSelectedSpot(null)}
         />

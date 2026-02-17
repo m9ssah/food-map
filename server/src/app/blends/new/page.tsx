@@ -33,7 +33,7 @@ export default function NewBlendPage() {
           name: blendName, 
           created_by: user.id,
           invite_code: inviteCode,
-          is_public: true  
+          is_public: true 
         })
         .select()
         .single();
@@ -102,14 +102,14 @@ export default function NewBlendPage() {
               value={blendName}
               onChange={(e) => setBlendName(e.target.value)}
               placeholder="e.g., Weekend Brunch Spots"
-              className="w-full bg-gray-700 text-white rounded-lg p-3 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-700 text-white rounded-lg p-3 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500"
             />
           </div>
 
           <button
             onClick={createBlend}
             disabled={!blendName.trim() || loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition"
+            className="w-full bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 disabled:bg-gray-600 disabled:cursor-not-allowed transition"
           >
             {loading ? 'Creating...' : 'Create Blend'}
           </button>

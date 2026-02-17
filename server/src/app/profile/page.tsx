@@ -266,50 +266,6 @@ export default async function ProfilePage() {
             )}
           </div>
         </div>
-
-        {/* Campus Favorites */}
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-4">Campus Favorites</h2>
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
-            {ratings.length > 0 ? (
-              ratings
-                .filter((r) => r.score >= 4)
-                .slice(0, 3)
-                .map((rating, index) => (
-                  <div
-                    key={rating.id}
-                    className={`p-4 flex items-center justify-between hover:bg-white/5 transition ${
-                      index !== 0 ? 'border-t border-white/10' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-white font-semibold">
-                        {rating.restaurant_name || 'Unknown'}
-                      </span>
-                      <div className="flex">
-                        {[...Array(rating.score)].map((_, i) => (
-                          <Star 
-                            key={i}
-                            className="w-4 h-4 text-yellow-400 fill-current"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <Link
-                      href={`/?selected=${rating.restaurant_id}`}
-                      className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition border border-white/20"
-                    >
-                      View
-                    </Link>
-                  </div>
-                ))
-            ) : (
-              <div className="p-6 text-center text-gray-400">
-                No favorites yet - rate some restaurants!
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
