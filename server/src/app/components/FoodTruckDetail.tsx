@@ -13,30 +13,41 @@ type MenuItem = {
 
 type Props = {
   restaurantId: string;
-  restaurantName: string;
-  address: string | null;
   onClose: () => void;
 };
 
-export default function FoodTruckDetail({ restaurantId, restaurantName, address, onClose }: Props) {
+export default function FoodTruckDetail({ restaurantId, onClose }: Props) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [restaurantName, setRestaurantName] = useState('');  // ⬅️ Now fetched internally
+  const [address, setAddress] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
   useEffect(() => {
-    async function fetchMenuItems() {
-      const { data, error } = await supabase
-        .from('restaurant_menu_items')
-        .select('id, name, price, price_label')
-        .eq('restaurant_id', restaurantId)
-        .order('price', { ascending: true });
+    async function fetchData() {
+      const [menuResult, restaurantResult] = await Promise.all([
+        supabase
+          .from('restaurant_menu_items')
+          .select('id, name, price, price_label')
+          .eq('restaurant_id', restaurantId)
+          .order('price', { ascending: true }),
+        supabase
+          .from('restaurants')
+          .select('name, address')
+          .eq('id', restaurantId)
+          .single(),
+      ]);
 
-      if (error) console.error('Error fetching menu items:', error);
-      setMenuItems(data || []);
+      if (menuResult.error) console.error('Error fetching menu items:', menuResult.error);
+      if (restaurantResult.error) console.error('Error fetching restaurant:', restaurantResult.error);
+
+      setMenuItems(menuResult.data || []);
+      setRestaurantName(restaurantResult.data?.name || '');
+      setAddress(restaurantResult.data?.address || null);
       setLoading(false);
     }
 
-    fetchMenuItems();
+    fetchData();
   }, [restaurantId]);
 
   function formatPrice(item: MenuItem): string {
@@ -45,7 +56,6 @@ export default function FoodTruckDetail({ restaurantId, restaurantName, address,
     return '';
   }
 
-  // group items roughly by price range for visual interest
   const cheapItems = menuItems.filter(i => i.price && i.price <= 6);
   const midItems = menuItems.filter(i => i.price && i.price > 6 && i.price <= 10);
   const premiumItems = menuItems.filter(i => i.price && i.price > 10);
@@ -64,7 +74,13 @@ export default function FoodTruckDetail({ restaurantId, restaurantName, address,
             <Truck className="w-5 h-5 text-orange-400" />
           </div>
           <div>
-            <h2 className="text-white font-bold text-lg leading-tight">{restaurantName}</h2>
+            <h2 className="text-white font-bold text-lg leading-tight">
+              {loading ? (
+                <span className="inline-block w-40 h-5 bg-white/10 rounded animate-pulse" />
+              ) : (
+                restaurantName
+              )}
+            </h2>
             {address && (
               <div className="flex items-center gap-1 mt-1">
                 <MapPin className="w-3 h-3 text-gray-400" />
