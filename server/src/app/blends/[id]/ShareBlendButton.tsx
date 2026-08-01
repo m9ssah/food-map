@@ -5,11 +5,13 @@ import { Copy, Check, Share2 } from 'lucide-react';
 
 export default function ShareBlendButton({ inviteCode }: { inviteCode: string }) {
   const [copied, setCopied] = useState(false);
-  
-  const shareUrl = `${window.location.origin}/blends/join/${inviteCode}`;
+
+  function getShareUrl() {
+    return `${window.location.origin}/blends/join/${inviteCode}`;
+  }
 
   async function copyToClipboard() {
-    await navigator.clipboard.writeText(shareUrl);
+    await navigator.clipboard.writeText(getShareUrl());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }

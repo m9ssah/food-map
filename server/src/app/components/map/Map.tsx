@@ -31,9 +31,8 @@ export default function Map({ spots }: Props) {
   }, [isMapReady, mapRef, setFlyTo]);
 
   useEffect(() => {
-    console.log('Map ready state changed:', isMapReady);
     if (isMapReady && displaySpots.length > 0) {
-      console.log('Creating markers for', displaySpots.length, 'spots');
+      // makers ready
     }
   }, [isMapReady, displaySpots]);
 

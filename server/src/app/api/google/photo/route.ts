@@ -9,7 +9,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Photo reference is required' }, { status: 400 });
     }
 
-    const googlePlacesApi = process.env.NEXT_PUBLIC_GOOGLE_PLACES;
+    const googlePlacesApi = process.env.GOOGLE_PLACES_API_KEY;
 
     try {
         const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${googlePlacesApi}`;

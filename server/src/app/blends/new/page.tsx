@@ -24,7 +24,7 @@ export default function NewBlendPage() {
       // generate simple invite code (no RPC needed)
       const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-      console.log('Creating blend with:', { name: blendName, created_by: user.id, invite_code: inviteCode });
+
 
       // create blend
       const { data: blend, error: blendError } = await supabase
@@ -45,7 +45,7 @@ export default function NewBlendPage() {
         return;
       }
 
-      console.log('Blend created:', blend);
+
 
       // add creator as member
       const { error: memberError } = await supabase
@@ -59,7 +59,7 @@ export default function NewBlendPage() {
         return;
       }
 
-      console.log('Member added, redirecting...');
+
       router.push(`/blends/${blend.id}`);
     } catch (err) {
       console.error('Unexpected error:', err);

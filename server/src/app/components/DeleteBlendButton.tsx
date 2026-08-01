@@ -10,7 +10,7 @@ type Props = {
   blendName: string;
 };
 
-export default function DeleteBlendButton({ blendId, blendName }: Props) {
+export default function DeleteBlendButton({ blendId, blendName: _blendName }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import MapWrapper from '@/app/components/map/MapWrapper';
-import { Users, Copy, Share2 } from 'lucide-react';
+import { Users } from 'lucide-react';
 import ShareBlendButton from './ShareBlendButton';
 import Link from 'next/link';
 
@@ -14,8 +14,6 @@ export default async function BlendPage({
 
   // check if user is authenticated
   const { data: { user } } = await supabase.auth.getUser();
-  console.log('Current user:', user?.id);
-  console.log('Looking for blend:', id);
 
   // get blend details and members
   const { data: blend, error } = await supabase
@@ -30,8 +28,7 @@ export default async function BlendPage({
     .eq('id', id)
     .single();
 
-  console.log('Blend result:', blend);
-  console.log('Blend error:', error);
+
 
   if (!blend) {
     return (
@@ -48,7 +45,7 @@ export default async function BlendPage({
     );
   }
 
-  const memberIds = blend?.blend_members.map((m: any) => m.user_id) || [];
+  const memberIds = blend?.blend_members.map((m: { user_id: string }) => m.user_id) || [];
   
   // get all restaurants favorited by any member (with counts)
   const { data: favoritedRestaurants } = await supabase
@@ -95,7 +92,7 @@ export default async function BlendPage({
       lat: r.latitude,
       lng: r.longitude,
       categories: r.restaurant_categories?.map(
-        (rc: any) => rc.categories?.slug
+        (rc: { categories: { slug: string } | null }) => rc.categories?.slug
       ).filter(Boolean) || [],
       category: r.restaurant_categories?.[0]?.categories?.slug,
       priceLevel: r.google_price_level,
@@ -122,7 +119,7 @@ export default async function BlendPage({
 
         {/* Member avatars */}
         <div className="flex gap-2 items-center mb-3">
-          {blend?.blend_members.slice(0, 5).map((member: any, i: number) => (
+          {blend?.blend_members.slice(0, 5).map((member: { user_id: string; profiles: { username: string | null } | null }) => (
             <div
               key={member.user_id}
               className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold"

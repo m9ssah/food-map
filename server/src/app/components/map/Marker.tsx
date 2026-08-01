@@ -61,8 +61,6 @@ export function Marker({ map, spot }: Props) {
 
     useEffect(() => {
         const primaryCategory = getPrimaryCategory(spot);
-        console.log('Creating marker for:', spot.name, 'at', spot.lat, spot.lng);
-        console.log('Primary category:', primaryCategory);
         
         // create container for marker and label
         const container = document.createElement('div');
@@ -98,7 +96,6 @@ export function Marker({ map, spot }: Props) {
         container.appendChild(dot);
 
         container.addEventListener('click', () => {
-            console.log('Marker clicked:', spot.name);
             setSelectedSpot(spot.id);
             map.flyTo({ center: [spot.lng, spot.lat], zoom: 18 });
         });
@@ -107,10 +104,9 @@ export function Marker({ map, spot }: Props) {
             .setLngLat([spot.lng, spot.lat])
             .addTo(map);
         
-        console.log('Marker added to map for:', spot.name);
+
         
         return () => {
-            console.log('Removing marker for:', spot.name);
             marker.remove();
         };
     }, [map, spot, setSelectedSpot]);

@@ -71,8 +71,6 @@ export default function SpotDetail({ restaurantId, onClose }: Props) {
     return (
       <FoodTruckDetail
         restaurantId={restaurantId}
-        restaurantName="" 
-        address={spotInfo.address}
         onClose={onClose}
       />
     );

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { ArrowLeft, Heart, Star, Users, Plus } from 'lucide-react';
+import { ArrowLeft, Heart, Users, Plus } from 'lucide-react';
 import Link from 'next/link';
 import LogoutButton from '../components/LogoutButton';
 import ProfileHeader from '../components/ProfileHeader';
@@ -60,7 +60,7 @@ export default async function ProfilePage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  const ratings: UserRating[] = (userRatings || []).map((r: any) => ({
+  const ratings: UserRating[] = (userRatings || []).map((r: { id: string; score: number; review: string | null; created_at: string; restaurant_id: string; restaurants: { name: string } | null }) => ({
     id: r.id,
     score: r.score,
     review: r.review,
@@ -81,7 +81,7 @@ export default async function ProfilePage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  const favorites: Favorite[] = (userFavorites || []).map((f: any) => ({
+  const favorites: Favorite[] = (userFavorites || []).map((f: { id: string; restaurant_id: string; created_at: string; restaurants: { name: string } | null }) => ({
     id: f.id,
     restaurant_id: f.restaurant_id,
     restaurant_name: f.restaurants?.name || 'Unknown',
@@ -102,7 +102,7 @@ export default async function ProfilePage() {
     `)
     .eq('user_id', user.id);
 
-  const blends: Blend[] = (userBlends || []).map((b: any) => ({
+  const blends: Blend[] = (userBlends || []).map((b: { blends: { id: string; name: string; created_at: string; invite_code: string; blend_members: { count: number }[] } }) => ({
     id: b.blends.id,
     name: b.blends.name,
     created_at: b.blends.created_at,
