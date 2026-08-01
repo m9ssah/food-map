@@ -60,13 +60,13 @@ export default async function ProfilePage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  const ratings: UserRating[] = (userRatings || []).map((r: { id: string; score: number; review: string | null; created_at: string; restaurant_id: string; restaurants: { name: string } | null }) => ({
+  const ratings: UserRating[] = (userRatings || []).map((r: { id: string; score: number; review: string | null; created_at: string; restaurant_id: string; restaurants: { name: string }[] }) => ({
     id: r.id,
     score: r.score,
     review: r.review,
     created_at: r.created_at,
     restaurant_id: r.restaurant_id,
-    restaurant_name: r.restaurants?.name || null,
+    restaurant_name: r.restaurants?.[0]?.name || 'Unknown',
   }));
 
   // fetch user's favorites
@@ -81,10 +81,10 @@ export default async function ProfilePage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  const favorites: Favorite[] = (userFavorites || []).map((f: { id: string; restaurant_id: string; created_at: string; restaurants: { name: string } | null }) => ({
+  const favorites: Favorite[] = (userFavorites || []).map((f: { id: string; restaurant_id: string; created_at: string; restaurants: { name: string }[] }) => ({
     id: f.id,
     restaurant_id: f.restaurant_id,
-    restaurant_name: f.restaurants?.name || 'Unknown',
+    restaurant_name: f.restaurants?.[0]?.name || 'Unknown',
     created_at: f.created_at,
   }));
 
@@ -213,7 +213,6 @@ export default async function ProfilePage() {
                       {/* Delete Button */}
                       <DeleteBlendButton 
                         blendId={blend.id} 
-                        blendName={blend.name}
                       />
 
                     </div>

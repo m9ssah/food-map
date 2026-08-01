@@ -296,7 +296,8 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
             {photoUrl && (
                 <div className="px-2 pt-2">
                     <div className="relative w-full h-64 overflow-hidden rounded-xl">
-                        <img 
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
                             src={photoUrl} 
                         alt={restaurant.name}
                         className="w-full h-full object-cover"
@@ -311,7 +312,7 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                 </div>
             )}
             {/* Header */}
-            <div className={`${photoUrl} p-4 flex items-start justify-between z-10`}>
+            <div className={`${photoUrl ? '' : 'pt-2'} p-4 flex items-start justify-between z-10`}>
                 <div>
                     <h2 className="text-4xl font-bold text-white mb-1 pr-10 flex items-center gap-4">
                         {restaurant.name}
@@ -345,7 +346,6 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                               const totalWeight = communityWeight + googleWeight;
                               
                               let combinedRating: number;
-                              let totalReviews: number;
                               
                               if (averageRating !== null && restaurant.google_rating) {
                                   // weighted average of both
@@ -353,13 +353,10 @@ export default function RestaurantDetail({ restaurantId, onClose }: Props) {
                                       (averageRating * communityWeight) + 
                                       (restaurant.google_rating * googleWeight)
                                   ) / totalWeight;
-                                  totalReviews = totalWeight;
                               } else if (averageRating !== null) {
                                   combinedRating = averageRating;
-                                  totalReviews = totalRatings;
                               } else {
                                   combinedRating = restaurant.google_rating!;
-                                  totalReviews = googleWeight;
                               }
                               
                               return (

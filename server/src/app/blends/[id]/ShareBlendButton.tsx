@@ -21,7 +21,7 @@ export default function ShareBlendButton({ inviteCode }: { inviteCode: string })
       await navigator.share({
         title: 'Join my food blend!',
         text: `Use code ${inviteCode} to join`,
-        url: shareUrl
+        url: getShareUrl()
       });
     } else {
       copyToClipboard();

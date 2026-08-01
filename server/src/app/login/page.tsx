@@ -19,6 +19,15 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    
+    // uoft email check
+    const emailDomain = email.split('@')[1]?.toLowerCase()
+    const allowedDomains = ['mail.utoronto.ca', 'utoronto.ca']
+    if (!emailDomain || !allowedDomains.includes(emailDomain)) {
+      setError('Only UofT emails (@mail.utoronto.ca or @utoronto.ca) are allowed')
+      setLoading(false)
+      return
+    }
 
     // sign up the user
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
@@ -160,7 +169,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 bg-blue-600 bg-white text-[#002F65] rounded-lg hover:bg-[#95B4D8] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 bg-white text-[#002F65] rounded-lg hover:bg-[#95B4D8] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
           </button>

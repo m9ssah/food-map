@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import RestaurantDetail from './map/RestaurantDetail';
 import FoodTruckDetail from './FoodTruckDetail';
@@ -21,7 +21,7 @@ type Props = {
 export default function SpotDetail({ restaurantId, onClose }: Props) {
   const [spotInfo, setSpotInfo] = useState<SpotInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     async function detectSpotType() {
@@ -56,7 +56,7 @@ export default function SpotDetail({ restaurantId, onClose }: Props) {
     }
 
     detectSpotType();
-  }, [restaurantId]);
+  }, [restaurantId, supabase]);
 
   if (loading) {
     return (

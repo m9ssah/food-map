@@ -7,10 +7,9 @@ import { useRouter } from 'next/navigation';
 
 type Props = {
   blendId: string;
-  blendName: string;
 };
 
-export default function DeleteBlendButton({ blendId, blendName: _blendName }: Props) {
+export default function DeleteBlendButton({ blendId }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();

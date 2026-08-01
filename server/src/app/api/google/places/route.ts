@@ -47,7 +47,7 @@ export async function GET(request: Request) {
 
     const supabase = await createClient();
 
-    const { data: restaurantData, error: _dbError } = await supabase
+    const { data: restaurantData } = await supabase
         .from('restaurants')
         .select('*')
         .eq('google_place_id', placeId)

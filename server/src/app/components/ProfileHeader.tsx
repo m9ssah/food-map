@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Edit2, Check, X, Camera, Upload } from 'lucide-react'
+import { Edit2, Check, X, Camera } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 

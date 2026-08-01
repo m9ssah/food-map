@@ -142,13 +142,13 @@ export async function GET(
     if (ratingsResult.data && ratingsResult.data.length > 0) {
         averageRating = ratingsResult.data.reduce((sum, r) => sum + r.score, 0) / ratingsResult.data.length;
         totalRatings = ratingsResult.data.length;
-        reviews.push(...ratingsResult.data.map((r: { id: string; score: number; review: string | null; created_at: string; user_id: string; profiles: { username: string | null } | null }) => ({
+        reviews.push(...ratingsResult.data.map((r: { id: string; score: number; review: string | null; created_at: string; user_id: string; profiles: { username: string | null }[] }) => ({
             id: r.id,
             score: r.score,
             review: r.review,
             created_at: r.created_at,
             user_id: r.user_id,
-            username: r.profiles?.username || null,
+            username: r.profiles?.[0]?.username || null,
         })));
     }
 
