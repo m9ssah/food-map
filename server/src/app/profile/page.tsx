@@ -60,14 +60,20 @@ export default async function ProfilePage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  const ratings: UserRating[] = (userRatings || []).map((r: { id: string; score: number; review: string | null; created_at: string; restaurant_id: string; restaurants: { name: string }[] }) => ({
-    id: r.id,
-    score: r.score,
-    review: r.review,
-    created_at: r.created_at,
-    restaurant_id: r.restaurant_id,
-    restaurant_name: r.restaurants?.[0]?.name || 'Unknown',
-  }));
+  const ratings: UserRating[] = (userRatings || []).map((r) => {
+    const raw = r as Record<string, unknown>;
+    const restaurant = Array.isArray(raw.restaurants)
+      ? (raw.restaurants as Record<string, unknown>[])[0]
+      : raw.restaurants as Record<string, unknown> | null;
+    return {
+      id: raw.id as string,
+      score: raw.score as number,
+      review: raw.review as string | null,
+      created_at: raw.created_at as string,
+      restaurant_id: raw.restaurant_id as string,
+      restaurant_name: (restaurant?.name as string) || 'Unknown',
+    };
+  });
 
   // fetch user's favorites
   const { data: userFavorites } = await supabase
@@ -81,12 +87,18 @@ export default async function ProfilePage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  const favorites: Favorite[] = (userFavorites || []).map((f: { id: string; restaurant_id: string; created_at: string; restaurants: { name: string }[] }) => ({
-    id: f.id,
-    restaurant_id: f.restaurant_id,
-    restaurant_name: f.restaurants?.[0]?.name || 'Unknown',
-    created_at: f.created_at,
-  }));
+  const favorites: Favorite[] = (userFavorites || []).map((f) => {
+    const raw = f as Record<string, unknown>;
+    const restaurant = Array.isArray(raw.restaurants)
+      ? (raw.restaurants as Record<string, unknown>[])[0]
+      : raw.restaurants as Record<string, unknown> | null;
+    return {
+      id: raw.id as string,
+      restaurant_id: raw.restaurant_id as string,
+      restaurant_name: (restaurant?.name as string) || 'Unknown',
+      created_at: raw.created_at as string,
+    };
+  });
 
   // fetch user's blends
   const { data: userBlends } = await supabase
@@ -102,13 +114,18 @@ export default async function ProfilePage() {
     `)
     .eq('user_id', user.id);
 
-  const blends: Blend[] = (userBlends || []).map((b: { blends: { id: string; name: string; created_at: string; invite_code: string; blend_members: { count: number }[] } }) => ({
-    id: b.blends.id,
-    name: b.blends.name,
-    created_at: b.blends.created_at,
-    invite_code: b.blends.invite_code,
-    member_count: b.blends.blend_members?.length || 0,
-  }));
+  const blends: Blend[] = (userBlends || []).map((b) => {
+    const blend = Array.isArray((b as Record<string, unknown>).blends)
+      ? ((b as Record<string, unknown>).blends as Record<string, unknown>[])[0]
+      : (b as Record<string, unknown>).blends as Record<string, unknown>;
+    return {
+      id: blend.id as string,
+      name: blend.name as string,
+      created_at: blend.created_at as string,
+      invite_code: blend.invite_code as string,
+      member_count: Array.isArray(blend.blend_members) ? (blend.blend_members as unknown[]).length : 0,
+    };
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">

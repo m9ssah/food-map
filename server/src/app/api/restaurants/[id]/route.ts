@@ -142,14 +142,20 @@ export async function GET(
     if (ratingsResult.data && ratingsResult.data.length > 0) {
         averageRating = ratingsResult.data.reduce((sum, r) => sum + r.score, 0) / ratingsResult.data.length;
         totalRatings = ratingsResult.data.length;
-        reviews.push(...ratingsResult.data.map((r: { id: string; score: number; review: string | null; created_at: string; user_id: string; profiles: { username: string | null }[] }) => ({
-            id: r.id,
-            score: r.score,
-            review: r.review,
-            created_at: r.created_at,
-            user_id: r.user_id,
-            username: r.profiles?.[0]?.username || null,
-        })));
+        reviews.push(...ratingsResult.data.map((r) => {
+            const raw = r as Record<string, unknown>;
+            const profiles = Array.isArray(raw.profiles)
+              ? (raw.profiles as Record<string, unknown>[])[0]
+              : raw.profiles as Record<string, unknown> | null;
+            return {
+                id: raw.id as string,
+                score: raw.score as number,
+                review: raw.review as string | null,
+                created_at: raw.created_at as string,
+                user_id: raw.user_id as string,
+                username: (profiles?.username as string) || null,
+            };
+        }));
     }
 
     let googleData: Partial<RestaurantData> | null = null;

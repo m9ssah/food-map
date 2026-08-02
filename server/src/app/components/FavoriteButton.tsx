@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Heart } from 'lucide-react';
 
@@ -12,24 +12,32 @@ type Props = {
 export default function FavoriteButton({ restaurantId, userId }: Props) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     if (!userId) return;
-    
-    checkFavorite();
-  }, [userId, restaurantId]);
 
-  async function checkFavorite() {
-    const { data } = await supabase
-      .from('user_favorites')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('restaurant_id', restaurantId)
-      .single();
-    
-    setIsFavorite(!!data);
-  }
+    let cancelled = false;
+
+    async function fetchFavoriteStatus() {
+      const { data } = await supabase
+        .from('user_favorites')
+        .select('id')
+        .eq('user_id', userId!)
+        .eq('restaurant_id', restaurantId)
+        .single();
+
+      if (!cancelled) {
+        setIsFavorite(!!data);
+      }
+    }
+
+    fetchFavoriteStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, restaurantId, supabase]);
 
   async function toggleFavorite() {
     if (!userId) return;
