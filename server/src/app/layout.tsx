@@ -8,7 +8,11 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "Maple, UofT Food Map",
-  description: "Discover your next go-to food spot near UofT",
+  description: "Discover your next food spot near UofT",
+  icons: {
+    icon: "/maple.ico",
+    shortcut: "/maple.ico",
+  },
 };
 
 export default function RootLayout({
