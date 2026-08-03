@@ -20,14 +20,12 @@ type Props = {
 
 export default function SpotDetail({ restaurantId, onClose }: Props) {
   const [spotInfo, setSpotInfo] = useState<SpotInfo | null>(null);
-  const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    async function detectSpotType() {
-      setLoading(true);
+    let cancelled = false;
 
-      // check if it's a food truck and get basic info in parallel
+    async function detectSpotType() {
       const [categoryResult, menuResult, restaurantResult] = await Promise.all([
         supabase
           .from('restaurant_categories')
@@ -46,27 +44,21 @@ export default function SpotDetail({ restaurantId, onClose }: Props) {
           .single(),
       ]);
 
-      setSpotInfo({
-        isFoodTruck: !!categoryResult.data,
-        hasMenuItems: (menuResult.count ?? 0) > 0,
-        address: restaurantResult.data?.address || null,
-      });
-
-      setLoading(false);
+      if (!cancelled) {
+        setSpotInfo({
+          isFoodTruck: !!categoryResult.data,
+          hasMenuItems: (menuResult.count ?? 0) > 0,
+          address: restaurantResult.data?.address || null,
+        });
+      }
     }
 
     detectSpotType();
+    return () => { cancelled = true; };
   }, [restaurantId, supabase]);
 
-  if (loading) {
-    return (
-      <div className="absolute bottom-0 left-0 right-0 z-10 h-32 bg-gray-900 rounded-t-2xl flex items-center justify-center border-t border-white/10">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/50" />
-      </div>
-    );
-  }
-
-  // show food truck detail if it's a food truck WITH menu items
+  // Always show RestaurantDetail immediately — no black loading popup.
+  // Once we confirm it's a food truck WITH menu items, swap to FoodTruckDetail.
   if (spotInfo?.isFoodTruck && spotInfo?.hasMenuItems) {
     return (
       <FoodTruckDetail
@@ -75,7 +67,8 @@ export default function SpotDetail({ restaurantId, onClose }: Props) {
       />
     );
   }
-  
+
+  // Show restaurant detail right away; it has its own graceful loading skeleton.
   return (
     <RestaurantDetail
       restaurantId={restaurantId}
