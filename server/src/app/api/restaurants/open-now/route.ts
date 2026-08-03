@@ -14,7 +14,7 @@ type RestaurantWithPlaceId = {
 
 export async function GET() {
     const supabase = await createClient();
-    const googlePlacesApi = process.env.NEXT_PUBLIC_GOOGLE_PLACES;
+    const googlePlacesApi = process.env.GOOGLE_PLACES_API_KEY;
 
     const { data: restaurants, error } = await supabase
         .from('restaurants')

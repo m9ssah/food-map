@@ -1,14 +1,23 @@
 import { createClient } from '@/lib/supabase/server';
 import MapWrapper from "./components/map/MapWrapper";
-import LogoutButton from "./components/LogoutButton";
-import Link from 'next/link';
-import { User, Search } from 'lucide-react';
 import SearchBar from "./components/SearchBar"; 
+
+type RestaurantRow = {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  google_price_level: number | null;
+  restaurant_categories: {
+    categories: {
+      slug: string;
+      name: string;
+    } | null;
+  }[];
+};
 
 export default async function Home() {
   const supabase = await createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: restaurants, error } = await supabase
     .from('restaurants')
@@ -24,20 +33,20 @@ export default async function Home() {
           name
         )
       )
-    `) as any;
+    `) as { data: RestaurantRow[] | null; error: { message: string; details: string; hint: string; code: string } | null };
 
   if (error) {
     console.error('Error fetching restaurants:', error); 
   }
 
-  const spots = restaurants?.map((restaurant: any) => ({
+  const spots = restaurants?.map((restaurant) => ({
     id: restaurant.id, 
     name: restaurant.name, 
     lat: restaurant.latitude, 
     lng: restaurant.longitude,
     categories: restaurant.restaurant_categories?.map(
-      (rc: any) => rc.categories?.slug
-    ).filter(Boolean) || [],
+      (rc) => rc.categories?.slug
+    ).filter((slug): slug is string => Boolean(slug)) || [],
     category: restaurant.restaurant_categories?.[0]?.categories?.slug,
     priceLevel: restaurant.google_price_level
   })) || []; 

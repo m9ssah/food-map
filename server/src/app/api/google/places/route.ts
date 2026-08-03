@@ -4,7 +4,7 @@ import { unstable_cache } from 'next/cache';
 
 const getCachedGooglePlacesData = unstable_cache(
     async (placeId: string) => {
-        const googlePlacesApi = process.env.NEXT_PUBLIC_GOOGLE_PLACES;
+        const googlePlacesApi = process.env.GOOGLE_PLACES_API_KEY;
 
         const googleResponse = await fetch(
             `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=opening_hours,rating,user_ratings_total,price_level,photos&key=${googlePlacesApi}`,
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
 
     const supabase = await createClient();
 
-    const { data: restaurantData, error: dbError } = await supabase
+    const { data: restaurantData } = await supabase
         .from('restaurants')
         .select('*')
         .eq('google_place_id', placeId)

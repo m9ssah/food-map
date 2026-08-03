@@ -41,7 +41,7 @@ type Category = {
 // cache data for 1 hour
 const getCachedGooglePlacesData = unstable_cache(
     async (placeId: string) => {
-        const googlePlacesApi = process.env.NEXT_PUBLIC_GOOGLE_PLACES;
+        const googlePlacesApi = process.env.GOOGLE_PLACES_API_KEY;
 
         try {
             const googleResponse = await fetch(
@@ -125,7 +125,6 @@ export async function GET(
             .in('id', categoryIds);
         
         categories = categoriesData ?? [];
-        console.log('Fetched categories:', categories);
     }
 
     if (restaurantResult.error) {
@@ -143,14 +142,20 @@ export async function GET(
     if (ratingsResult.data && ratingsResult.data.length > 0) {
         averageRating = ratingsResult.data.reduce((sum, r) => sum + r.score, 0) / ratingsResult.data.length;
         totalRatings = ratingsResult.data.length;
-        reviews.push(...ratingsResult.data.map((r: any) => ({
-            id: r.id,
-            score: r.score,
-            review: r.review,
-            created_at: r.created_at,
-            user_id: r.user_id,
-            username: r.profiles?.username || null,
-        })));
+        reviews.push(...ratingsResult.data.map((r) => {
+            const raw = r as Record<string, unknown>;
+            const profiles = Array.isArray(raw.profiles)
+              ? (raw.profiles as Record<string, unknown>[])[0]
+              : raw.profiles as Record<string, unknown> | null;
+            return {
+                id: raw.id as string,
+                score: raw.score as number,
+                review: raw.review as string | null,
+                created_at: raw.created_at as string,
+                user_id: raw.user_id as string,
+                username: (profiles?.username as string) || null,
+            };
+        }));
     }
 
     let googleData: Partial<RestaurantData> | null = null;
@@ -172,7 +177,7 @@ export async function GET(
             }
         }
         try {
-            const googlePlacesApi = process.env.NEXT_PUBLIC_GOOGLE_PLACES;
+            const googlePlacesApi = process.env.GOOGLE_PLACES_API_KEY;
             const openNowResponse = await fetch(
                 `https://maps.googleapis.com/maps/api/place/details/json?place_id=${restaurant.google_place_id}&fields=opening_hours&key=${googlePlacesApi}`
             );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { X, Truck, MapPin, DollarSign } from 'lucide-react';
 
@@ -21,7 +21,7 @@ export default function FoodTruckDetail({ restaurantId, onClose }: Props) {
   const [restaurantName, setRestaurantName] = useState('');  // ⬅️ Now fetched internally
   const [address, setAddress] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     async function fetchData() {
@@ -48,7 +48,7 @@ export default function FoodTruckDetail({ restaurantId, onClose }: Props) {
     }
 
     fetchData();
-  }, [restaurantId]);
+  }, [restaurantId, supabase]);
 
   function formatPrice(item: MenuItem): string {
     if (item.price_label) return item.price_label;

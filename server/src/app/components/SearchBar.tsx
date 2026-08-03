@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Search, X, Star, ChevronLeft, GripVertical, SlidersHorizontal, Coffee, Van, University, Pizza, Soup, DollarSign, 
-         CookingPot, Drumstick, Vegan, Laptop, Clock, Utensils, Beef, CakeSlice, IceCreamCone, Dices, GraduationCap,MapPin
+         CookingPot, Drumstick, Vegan, Laptop, Clock, Utensils, Beef, CakeSlice, IceCreamCone, Dices, GraduationCap, MapPin, User
         } from 'lucide-react'
 import { useMapStore, Spot } from '@/stores/mapStore'
 
@@ -19,18 +19,8 @@ type Restaurant = {
   photoUrl?: string | null
 }
 
-type Category = {
-    id: string;
-    slug: string;
-    name: string;
-};
 
-type RestaurantData = {
-    restaurant: Restaurant;
-    categories?: Category[];
-    averageRating: number | null;
-    totalRatings: number;
-};
+
 
 const filterTags = [
   { icon: Utensils, label: 'Restaurants' },
@@ -383,10 +373,13 @@ export default function SearchBar() {
 
       setLoading(true)
       
+      // prevent filter injection
+      const sanitizedQuery = query.replace(/[,().*\\]/g, '')
+      
       const { data, error } = await supabase
         .from('restaurants') 
         .select('id, name, address, latitude, longitude, google_rating, google_ratings_count')
-        .or(`name.ilike.%${query}%,address.ilike.%${query}%`)
+        .or(`name.ilike.%${sanitizedQuery}%,address.ilike.%${sanitizedQuery}%`)
         .limit(100)  // TODO adjust limit accordingly
 
       if (error) {
@@ -500,27 +493,6 @@ export default function SearchBar() {
       }
     }
   }
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return
-      const deltaX = e.clientX - dragRef.current.startX
-      const deltaY = e.clientY - dragRef.current.startY
-      setPosition({
-        x: dragRef.current.initialX + deltaX,
-        y: dragRef.current.initialY + deltaY
-      })
-    }
-    const handleMouseUp = () => setIsDragging(false)
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
-    }
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [isDragging])
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed)
@@ -665,7 +637,7 @@ export default function SearchBar() {
             {/* Profile Button */}
             <a href="/profile" className="ml-2 p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
               <div className="w-7 h-7 rounded-full bg-gray-500 flex items-center justify-center">
-                <span className="text-xs text-white"></span>
+                <User className="w-4 h-4 text-white" />
               </div>
             </a>
           </div>
@@ -738,7 +710,7 @@ export default function SearchBar() {
               </div>
             ) : query.trim().length >= 2 ? (
               <div className="p-4 text-center text-gray-500">
-                No restaurants found for "{query}"
+                No restaurants found for &quot;{query}&quot;
               </div>
             ) : null}
           </div>
@@ -781,6 +753,7 @@ export default function SearchBar() {
                     {/* Background Image */}
                     <div className="relative h-70 w-full">
                       {getPhotoUrl(restaurant) ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img 
                           src={getPhotoUrl(restaurant)!} 
                           alt={restaurant.name}
@@ -822,7 +795,7 @@ export default function SearchBar() {
                 ))
               ) : (
                 <div className="text-center py-12 text-gray-400">
-                  No spots found for "{activeFilter}"
+                  No spots found for &quot;{activeFilter}&quot;
                 </div>
               )}
             </div>
@@ -837,6 +810,7 @@ export default function SearchBar() {
                 className="relative w-full group overflow-hidden rounded-2xl h-70 transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 {/* background */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={category.image} 
                   alt={category.label}
