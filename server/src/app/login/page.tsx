@@ -33,6 +33,7 @@ export default function LoginPage() {
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
 
     if (signUpError) {
@@ -155,6 +156,7 @@ export default function LoginPage() {
               placeholder="Enter your password"
               className="w-full px-4 py-2 bg-[#17283C] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
               required
+              minLength={6}
             />
           </div>
 
