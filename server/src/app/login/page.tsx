@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -19,7 +19,7 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    
+
     // uoft email check
     const emailDomain = email.split('@')[1]?.toLowerCase()
     const allowedDomains = ['mail.utoronto.ca', 'utoronto.ca']
@@ -29,29 +29,20 @@ export default function LoginPage() {
       return
     }
 
-    // sign up the user
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    // sign up the user; the username is picked up by the handle_new_user trigger
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: { username: username || email.split('@')[0] },
+      },
     })
 
     if (signUpError) {
       setError(signUpError.message)
       setLoading(false)
       return
-    }
-
-    // update their profile with username
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ username: username || email.split('@')[0] })
-        .eq('id', authData.user.id)
-
-      if (profileError) {
-        console.error('Error updating profile:', profileError)
-      }
     }
 
     setLoading(false)
@@ -82,7 +73,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-900">
-      <div className="w-full max-w-md p-8 rounded-lg shadow-xl" style={{  backgroundColor: '#213955' }}>
+      <div className="w-full max-w-md p-8 rounded-lg shadow-xl" style={{ backgroundColor: '#213955' }}>
         <h1 className="text-2xl font-bold text-white mb-6 text-center">
           Campus Food App
         </h1>
@@ -91,21 +82,19 @@ export default function LoginPage() {
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setIsSignUp(false)}
-            className={`flex-1 py-2 rounded-lg transition ${
-              !isSignUp
+            className={`flex-1 py-2 rounded-lg transition ${!isSignUp
                 ? 'bg-white text-[#002F65]'
                 : 'bg-gray-700 text-gray-300'
-            }`}
+              }`}
           >
             Sign In
           </button>
           <button
             onClick={() => setIsSignUp(true)}
-            className={`flex-1 py-2 rounded-lg transition ${
-              isSignUp
+            className={`flex-1 py-2 rounded-lg transition ${isSignUp
                 ? 'bg-white text-[#002F65]'
                 : 'bg-gray-700 text-gray-300'
-            }`}
+              }`}
           >
             Sign Up
           </button>
